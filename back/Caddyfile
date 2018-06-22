@@ -1,0 +1,7 @@
+insta.carboservers.nl {
+  proxy / 108.61.117.152:3000 {
+    header_downstream Access-Control-Allow-Origin *
+    header_downstream Access-Control-Allow-Headers Content-Type
+    header_downstream Access-Control-Allow-Methods GET,POST,OPTIONS
+  }
+}

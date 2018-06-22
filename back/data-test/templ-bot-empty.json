@@ -1,0 +1,101 @@
+{
+  "data": {
+    "settings": {
+      "sleepReduce": {
+        "percentage": 100
+      },
+      "doComment": {
+        "enabled": "False",
+        "percentage": 0
+      },
+      "comments": {
+        "arr": [],
+        "media": ""
+      },
+      "doFollow": {
+        "enabled": "False",
+        "percentage": 0,
+        "times": 1
+      },
+      "ignoreUsers": {
+        "arr": []
+      },
+      "dontLike": {
+        "arr": []
+      },
+      "ignoreIfContains": {
+        "arr": []
+      },
+      "dontInclude": {
+        "arr": []
+      },
+      "userInteract": {
+        "amount": 0,
+        "random": "False",
+        "percentage": 0,
+        "media": ""
+      },
+      "upperFollowerCount": {
+        "limit": 0
+      },
+      "lowerFollowerCount" : {
+        "limit": 0
+      }
+    },
+    "commands": {
+      "likeByTags": {
+        "arr": [],
+        "amount": 0,
+        "media": ""
+      },
+      "likeFromImage": {
+        "url": "",
+        "amount": 0
+      },
+      "likeByUsers": {
+        "usernames": [],
+        "amount": 0,
+        "random": "False"
+      },
+      "likeByFeed": {
+        "amount": 0,
+        "randomize": "False",
+        "unfollow": "False",
+        "interact": "False"
+      },
+      "followByList": {
+        "arr": [],
+        "times": 0
+      },
+      "followUserFollowers": {
+        "arr": [],
+        "amount": 0,
+        "random": "False",
+        "interact": "False",
+        "sleepDelay": 600
+      },
+      "interactUserFollowers": {
+        "arr": [],
+        "amount": 0,
+        "random": "False"
+      },
+      "interactUserFollowing": {
+        "arr": [],
+        "amount": 0,
+        "random": "False"
+      },
+      "followUserFollowing": {
+        "arr": [],
+        "amount": 0,
+        "random": "False",
+        "interact": "False",
+        "sleepDelay": 600
+      },
+      "unfollowUsers": {
+        "amount": 0,
+        "onlyInstapyFollowed": "False",
+        "onlyInstapyMethod": "FIFO"
+      }
+    }
+  }
+}
