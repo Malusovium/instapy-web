@@ -1,0 +1,25 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "types",
+    "typeRoots": ["types"],
+    "noEmitOnError": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "sourceMap": true,
+    "noImplicitReturns": false,
+    "strict": true,
+    "strictFunctionTypes": false,
+    "allowJs": true,
+    "lib": [
+      "esnext",
+      "ES7",
+      "ES6",
+      "ES5",
+      "DOM"
+    ]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "build"]
+}
