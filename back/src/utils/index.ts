@@ -1,10 +1,14 @@
 import { initBcrypt } from './bcrypt'
 import { initJwt } from './jwt'
-import { _throw, throwWhen } from './throw'
 import { handleError } from './handle-error'
+import { _throw
+       , throwWhen
+       , throwWhenNot
+       } from './throw'
 
 export { genId } from './gen-id'
 export { _db } from './db'
+export { bot } from './bot'
 
 export const auth =
   { initBcrypt
@@ -14,5 +18,6 @@ export const auth =
 export const err =
   { _throw
   , throwWhen
+  , throwWhenNot
   , handleError
   }

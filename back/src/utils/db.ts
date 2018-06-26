@@ -16,8 +16,8 @@ const initState =
     )
 
 const dbPath =
-  process.env.DB_JSON_PATH
-    ? `${process.env.DB_JSON_PATH}/db.json`
+  process.env.DATA_PATH
+    ? `${process.env.DATA_PATH}/db.json`
     : `${__dirname}/../../../data/db.json`
 
 const productionLow =

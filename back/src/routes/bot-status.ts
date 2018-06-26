@@ -1,12 +1,12 @@
-const start =
-  async () =>
-    'succes'
+import { bot
+       , err
+       } from '../utils'
 
-const stop =
-  async () =>
-    'succes'
-
-export bot =
-  { start
-  , stop
+const statusBot =
+  async (ctx:any) => {
+    await bot.status()
+      .then( (ps:any) => ctx.body = { status: ps }
+      ).catch( err.handleError(ctx) )
   }
+
+export default { get: statusBot }

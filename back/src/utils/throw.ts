@@ -11,3 +11,10 @@ export const throwWhen =
       equals(valueA, valueB)
         ? _throw(message)
         : valueB
+
+export const throwWhenNot =
+  (message:string, valueA:any) =>
+    (valueB:any) =>
+      equals(valueA, valueB)
+        ? valueB
+        : _throw(message)

@@ -34,7 +34,7 @@ const checkPassWord =
       ).then(credentialsIncorrect)
 
 const checkCredentials =
-  (userName:string, passWord:string) => 
+  (userName:string, passWord:string) =>
     Promise.all(
       [ checkUserName(userName)
       , checkPassWord(passWord)
@@ -44,9 +44,30 @@ const checkCredentials =
 const generateJwtUid =
   (): string => genId()
 
+const expireIn =
+  ( { days = 0
+    , hours = 0
+    , minutes = 0
+    , seconds = 0
+    }
+  ) => {
+    const daysInSeconds = days * 24 * 60 * 60
+    const hoursInSeconds = hours * 60 * 60
+    const minutesInSeconds = minutes * 60
+    const secondsInSeconds = seconds * 1
+
+    const totalSeconds =
+      daysInSeconds
+      + hoursInSeconds
+      + minutesInSeconds
+      + secondsInSeconds
+
+    return expireAt(Date.now(), totalSeconds)
+  }
+
 const generateJwtToken =
   (uid:string): Promise<string> =>
-    createToken( { exp: expireAt(Date.now(), 60 * 60)
+    createToken( { exp: expireIn({days: 1})
                  , uid
                  }
                )

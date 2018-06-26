@@ -1,11 +1,11 @@
 {
   "name": "instapy-web-back",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Instapy web backend",
   "main": "src/index.ts",
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
-    "start": "NODE_ENV=production ts-node src/index.ts",
+    "start": "NODE_ENV=production sudo ts-node src/index.ts",
     "test": "ava-ts src/**/*-test.ts -w",
     "compile": "tsc --outDir ./dist"
   },
