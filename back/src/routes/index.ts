@@ -10,6 +10,7 @@ import logout from './logout'
 import startBot from './bot-start'
 import stopBot from './bot-stop'
 import statusBot from './bot-status'
+import botConfig from './bot-config'
 
 const apiRouter = new Router()
 
@@ -50,6 +51,8 @@ apiRouter
   .get('/bot-start', koaBody(), startBot.get)
   .get('/bot-stop', koaBody(), stopBot.get)
   .get('/bot-status', koaBody(), statusBot.get)
+  .get('/bot-config', koaBody(), botConfig.get)
+  .post('/bot-config', koaBody(), botConfig.post)
   .get('/test', koaBody(), test.get)
 
 export default apiRouter
