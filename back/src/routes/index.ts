@@ -30,6 +30,6 @@ apiRouter
   .get('/bot-start', koaBody(), startBot.get)
   .get('/bot-stop', koaBody(), stopBot.get)
   .get('/bot-status', koaBody(), statusBot.get)
-  .post('/test', koaBody(), test.post)
+  .get('/test', koaBody(), test.get)
 
 export default apiRouter

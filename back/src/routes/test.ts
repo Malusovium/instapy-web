@@ -1,15 +1,15 @@
-const login =
-  (ctx:any) => {
-    const data = ctx.request.body.data
-    const userName = data.userName
-    const passWord = data.passWord
-    ctx.body =
-      [ 'Username: '
-      , userName
-      , ''
-      , 'Password: '
-      , passWord
-      ].join('\n')
+import { _db } from '../utils'
+
+const test =
+  async (ctx:any) => {
+
+    await _db
+      .then( (db:any) =>
+        db.getState()
+      ).then( (state:any) =>
+        ctx.body =
+          { dbState: state }
+      )
   }
 
-export default { post: login }
+export default { get: test }

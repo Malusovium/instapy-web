@@ -41,8 +41,16 @@ const checkCredentials =
       ]
     )
 
-const generateJwtUid =
+const generateJwtKey =
   (): string => genId()
+
+const storeJwtKey =
+  (key:string): Promise<string> =>
+    _db
+      .then( (db:any) =>
+        db.set('jwtKey', key)
+          .write()
+      ).then(() => key)
 
 const expireIn =
   ( { days = 0
@@ -77,7 +85,8 @@ const login =
     const { userName, passWord } = ctx.request.body.data
 
     await checkCredentials(userName, passWord)
-      .then( generateJwtUid )
+      .then( generateJwtKey )
+      .then( storeJwtKey )
       .then( generateJwtToken )
       .then( (token:string) =>
         ctx.body = { token }
