@@ -16,7 +16,7 @@ indexRouter
       )
 
 app
-  .use(serve(__dirname + '/../../temp-front/build'))
+  .use(serve(__dirname + '/../../front/build'))
   .use(indexRouter.routes())
 
 app.listen(PORT)
