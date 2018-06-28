@@ -20,13 +20,17 @@ const dbPath =
     ? `${process.env.DATA_PATH}/db.json`
     : `${__dirname}/../../../data/db.json`
 
+console.log(dbPath)
+
 const productionLow =
   (defaultState:any) =>
     new Promise( (res, rej) =>
       low(new FileAsync(dbPath))
-        .then( (db:any) =>
-          db.defaults(defaultState).write()
-            .then( () => res(db))
+        .then( (db:any) => {
+            console.log('went here')
+            db.defaults(defaultState).write()
+              .then( () => res(db))
+          }
         )
     )
 
@@ -34,6 +38,7 @@ const inMemoryLow =
   (defaultState:any) =>
     Promise.resolve(low(new Memory('')))
       .then( (db:any) => {
+        console.log('went there')
         db.defaults(defaultState).write()
         return db
       })

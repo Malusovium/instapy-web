@@ -4,6 +4,8 @@
   "description": "The front end of instapy-web",
   "main": "index.js",
   "scripts": {
+    "dev": "node fuse dev",
+    "build": "node fuse build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

@@ -18,19 +18,9 @@ context
           , output: 'build/$name.js'
           , sourceMaps: !this.isProduction
           , plugins:
-            [ WebIndexPlugin
-              ({ template: './src/index.html'})
-            , this.isProduction
-              && QuantumPlugin
-                ( { bakeApiIntoBundle: 'app'
-                  , containedAPI: true
-                  , uglify: true
-                  , treeshkae: true
-                  }
-                )
-            , EnvPlugin
+            [ EnvPlugin
               ( { ENV:
-                    this.isProduction 
+                    this.isProduction
                       ? 'production'
                       : 'test'
                 , URL:
@@ -39,6 +29,19 @@ context
                       : 'http://localhost:3000'
                 }
               )
+            , WebIndexPlugin
+              ({ template: './src/index.html'})
+            , this.isProduction
+              && QuantumPlugin
+                ( { // target: 'browser/es6'
+                  // bakeApiIntoBundle: 'app'
+                    processPolyfill: true
+                  // , replaceProcessEnv: true
+                  // , containedAPI: true
+                  , uglify: true
+                  , treeshkae: true
+                  }
+                )
             ]
           }
         )
@@ -58,7 +61,11 @@ const dev =
     await clean()
     context.isProduction = false
     const fuse = context.getConfig()
-    fuse.dev({ fallback: 'index.html' })
+    fuse
+      .dev
+       ( { fallback: 'index.html'
+         }
+       )
     fuse
       .bundle('app')
       .instructions('> index.ts')
@@ -72,7 +79,7 @@ const build =
   async context => {
     await clean()
     context.isProduction = true
-    context.backUrl = process.env.FQDN
+    context.backUrl = process.env.FQDN || 'https://my-web.com'
     const fuse = context.getConfig()
     fuse.bundle('app')
         .instructions('> index.ts')

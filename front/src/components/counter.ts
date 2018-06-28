@@ -69,7 +69,7 @@ const view = (state$: Stream<State>): Stream<VNode> =>
   state$.map(({ count }) => 
     div({attrs: {class: style({background: 'lightBlue'})}}, [
       h2(`My Awesome Cycle.js app - Page 1`),
-      h2(process.env.ENV),
+      h2( process.env.ENV ),
       h2(process.env.URL),
       h2('update'),
       i('.im.im-spotify'),
