@@ -29,6 +29,7 @@
     "cycle-storageify": "^4.0.1",
     "cyclejs-utils": "^3.1.0",
     "cyclic-router": "^5.1.7",
+    "rambda": "^1.1.5",
     "switch-path": "^1.2.0",
     "typestyle": "^2.0.1",
     "xstream": "^11.7.0"

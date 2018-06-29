@@ -11,22 +11,18 @@ import switchPath from 'switch-path';
 import storageDriver from '@cycle/storage';
 
 import { Component } from './interfaces';
-import speechDriver from './drivers/speech';
-import seoDriver from './drivers/seo'
 
 export type DriverThunk = Readonly<[string, () => any]> & [string, () => any]; // work around readonly
 export type DriverThunkMapper = (t: DriverThunk) => DriverThunk;
 
 // Set of Drivers used in this App
-const driverThunks: DriverThunk[] = [
-    ['SEO', () => seoDriver],
-    ['DOM', () => makeDOMDriver('#app')],
-    ['HTTP', () => makeHTTPDriver()],
-    ['time', () => timeDriver],
-    ['history', () => makeHistoryDriver()],
-    ['storage', () => storageDriver],
-    ['speech', () => speechDriver]
-];
+const driverThunks: DriverThunk[] =
+[ ['DOM', () => makeDOMDriver('#app')]
+, ['HTTP', () => makeHTTPDriver()]
+, ['time', () => timeDriver]
+, ['history', () => makeHistoryDriver()]
+, ['storage', () => storageDriver]
+]
 
 export const buildDrivers = (fn: DriverThunkMapper) =>
     driverThunks
