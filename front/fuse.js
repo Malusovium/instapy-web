@@ -7,8 +7,8 @@ const { FuseBox
       , WebIndexPlugin
       , EnvPlugin
       , QuantumPlugin
-      , ImageBase64Plugin
-      // , CopyPlugin
+      // , ImageBase64Plugin
+      , CopyPlugin
       } = require('fuse-box')
 
 context
@@ -20,7 +20,13 @@ context
           , output: 'build/$name.js'
           , sourceMaps: !this.isProduction
           , plugins:
-            [ ImageBase64Plugin()
+            // [ ImageBase64Plugin()
+            [ CopyPlugin
+              ( { useDefault: true
+                , files: ['*.png' ]
+                // , dest: 'assets'
+                }
+              )
             , EnvPlugin
               ( { ENV:
                     this.isProduction

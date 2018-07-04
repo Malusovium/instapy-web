@@ -1,6 +1,6 @@
 import { Component } from './interfaces'
 
-import * as mainBackground from './assets/main-background.png'
+import mainBackground from './assets/main-background.png'
 import { LoginStyle
        , LoginTransitions
        , Login
@@ -13,7 +13,6 @@ export type RouteValue =
 
 export type Routes =
   { readonly [index: string]: RouteValue }
-
 
 const style =
   { color:
