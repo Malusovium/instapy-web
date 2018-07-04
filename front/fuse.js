@@ -7,6 +7,8 @@ const { FuseBox
       , WebIndexPlugin
       , EnvPlugin
       , QuantumPlugin
+      , ImageBase64Plugin
+      // , CopyPlugin
       } = require('fuse-box')
 
 context
@@ -18,14 +20,19 @@ context
           , output: 'build/$name.js'
           , sourceMaps: !this.isProduction
           , plugins:
-            [ EnvPlugin
+            [ ImageBase64Plugin()
+            , EnvPlugin
               ( { ENV:
                     this.isProduction
                       ? 'production'
                       : 'test'
-                , URL:
+                , FRONT_URL:
                     this.isProduction
-                      ? this.backUrl
+                      ? this.fqdn
+                      : 'http://localhost:4444'
+                , BACK_URL:
+                    this.isProduction
+                      ? this.fqdn
                       : 'http://localhost:3000'
                 }
               )
@@ -79,7 +86,7 @@ const build =
   async context => {
     await clean()
     context.isProduction = true
-    context.backUrl = process.env.FQDN || 'https://my-web.com'
+    context.fqdn = process.env.FQDN || 'https://my-web.com'
     const fuse = context.getConfig()
     fuse.bundle('app')
         .instructions('> index.ts')

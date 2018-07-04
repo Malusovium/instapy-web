@@ -25,6 +25,7 @@
     "@cycle/run": "^4.3.0",
     "@cycle/storage": "^5.0.3",
     "csstips": "^0.3.0",
+    "csx": "^9.0.0",
     "cycle-onionify": "^6.1.0",
     "cycle-storageify": "^4.0.1",
     "cyclejs-utils": "^3.1.0",

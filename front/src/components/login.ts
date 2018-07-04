@@ -19,6 +19,11 @@ import { transition
        , SnabbTransition
        } from '../utils/snabb-transitions'
 
+import { genButtonColors
+       , genStylesheet 
+       , genButton
+       } from '../dom-helpers/button'
+
 export interface Sources extends BaseSources {
   onion: StateSource<State>
 }
@@ -27,7 +32,11 @@ export interface Sinks extends BaseSinks {
 }
 
 export interface Classes {
-  wrapper: string
+  outer: string
+  inner: string
+  userName: string
+  passWord: string
+  loginButton: string
 }
 
 export interface Transitions {
@@ -73,10 +82,33 @@ export const LoginStyle =
     // : ColorPallete
   ) =>
   stylesheet
-  ( { wrapper:
+  ( { outer:
       { fontSize: '1em'
+      , height: '100%'
+      , width: '100%'
+      , backgroundImage: color.backgroundImage
+      , backgroundSize: 'cover'
+      , paddingTop: '2rem'
       , color: color.mainText
       , opacity: 1
+      }
+    , inner:
+      { fontSize: '1.5em'
+      , borderRadius: '.4rem'
+      , marginLeft: 'auto'
+      , marginRight: 'auto'
+      , width: '90%'
+      , maxWidth: '40rem'
+      , backgroundColor: color.background
+      }
+    , userName:
+      { fontSize: '1em'
+      }
+    , passWord:
+      { fontSize: '1em'
+      }
+    , loginButton:
+      { fontSize: '1em'
       }
     }
   )
@@ -89,12 +121,47 @@ export const LoginTransitions: Transitions =
  { wrapper: snabbTransition(wrapperTransition)
  }
 
+const loginButton =
+  (buttonColor:string) =>
+    genButton
+    ( genStylesheet
+      ( genButtonColors
+        (buttonColor) 
+      )
+    )
+
 const view = (css:Classes, trans:Transitions) =>
   (state$: Stream<State>): Stream<VNode> =>
     state$
       .map( ({ myNumber }) =>
-        div( `.${css.wrapper}`
-           , { style: trans.wrapper}
-           , myNumber
-           )
+        div
+        ( `.${css.outer}`
+        , { style: trans.wrapper}
+        , [ div
+            (`.${css.inner}`
+            , [ div(`.${css.userName}`, 'userName:')
+              , div(`.${css.passWord}`, 'passWord' )
+              , div(`.${css.loginButton}`, 'login button')
+              , div
+                ('Main Button for: #7161ef'
+                , [ loginButton('#7161ef')('normal')
+                  , loginButton('#7161ef')('disabled')
+                  , loginButton('#7161ef')('warning')
+                  , loginButton('#7161ef')('error')
+                  , loginButton('#7161ef')('loading')
+                  ]
+                )
+              , div
+                ('Sub Button for: #f991cc'
+                , [ loginButton('#f991cc')('normal')
+                  , loginButton('#f991cc')('disabled')
+                  , loginButton('#f991cc')('warning')
+                  , loginButton('#f991cc')('error')
+                  , loginButton('#f991cc')('loading')
+                  ]
+                )
+              ]
+            )
+          ]
+        )
       )
