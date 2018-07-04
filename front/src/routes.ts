@@ -18,7 +18,6 @@ const style =
   { color:
     { background: '#efd9ce'
     , backgroundImage: `url(${mainBackground})`
-    // , backgroundImage: `url(${process.env.FRONT_URL}/assets/blurred-background.png)`
     , mainButton: '#7161ef'
     , subButton: '#f991cc'
     , mainText: '1c1d21'
