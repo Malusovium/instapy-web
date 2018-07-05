@@ -40,7 +40,8 @@ export interface Classes {
 }
 
 export interface Transitions {
-  wrapper?: SnabbTransition
+  outer: SnabbTransition | false
+  inner: SnabbTransition | false
 }
 
 export interface State{
@@ -75,11 +76,8 @@ const intent = (DOM: DOMSource): Stream<Reducer> => {
 }
 
 export const LoginStyle = 
-  ( { color
-    }
-    : { color: ColorPallete
-      }
-    // : ColorPallete
+  ( { color }
+    : { color: ColorPallete }
   ) =>
   stylesheet
   ( { outer:
@@ -90,7 +88,6 @@ export const LoginStyle =
       , backgroundSize: 'cover'
       , paddingTop: '2rem'
       , color: color.mainText
-      , opacity: 1
       }
     , inner:
       { fontSize: '1.5em'
@@ -114,12 +111,15 @@ export const LoginStyle =
     }
   )
 
-const wrapperTransition: Transition[] =
-  [ transition('opacity')(1, 0)
-  ]
+// const wrapperTransition: Transition[] =
+//   [ transition('opacity')(1, 1)
+//   ]
 
 export const LoginTransitions: Transitions =
- { wrapper: snabbTransition(wrapperTransition)
+ { outer: false
+ , inner:
+    snabbTransition
+    ( [ transition('opacity', 1)('0', { add: '1', rem: '0'} ) ] )
  }
 
 const loginButton =
@@ -137,9 +137,10 @@ const view = (css:Classes, trans:Transitions) =>
       .map( ({ myNumber }) =>
         div
         ( `.${css.outer}`
-        , { style: trans.wrapper}
+        , { style: trans.outer}
         , [ div
             (`.${css.inner}`
+            , { style: trans.inner}
             , [ div(`.${css.userName}`, 'userName:')
               , div(`.${css.passWord}`, 'passWord' )
               , div(`.${css.loginButton}`, 'login button')
