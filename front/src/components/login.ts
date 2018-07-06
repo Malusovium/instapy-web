@@ -8,6 +8,7 @@ import { div
 import { StateSource } from 'cycle-onionify'
 import { HTTPSource } from '@cycle/http'
 import isolate from '@cycle/isolate'
+import { StorageRequest } from '@cycle/storage'
 
 import { propEq
        , pick
@@ -187,6 +188,8 @@ export const Login = (colors: ColorPallete) =>
               , passWord$.onion
               )
            , HTTP: action$.HTTP
+           , storage: action$.storage
+           , router: action$.router
            }
   }
 
@@ -242,20 +245,12 @@ const intent =
              }
            )
          )
-        // .take(1)
-
-    // type LoginResponse =
-    //   { error?: string
-    //   , token?: string
-    //   }
 
     const loginResponse$ =
       HTTP
         .select('login')
         .flatten()
         .map(path('body'))
-        // .debug('response')
-        // .mapTo( (prev) => prev)
 
     const loginNormal$ =
       loginResponse$
@@ -274,6 +269,22 @@ const intent =
              )
          )
 
+    const loginToken$ =
+      loginResponse$
+        .filter(path('token'))
+        .map<StorageRequest>
+         ( ({token}) => (
+             { target: 'session'
+             , key: 'jwt-token'
+             , value: token 
+             }
+           )
+         )
+
+    const changeRoute$ =
+      loginToken$
+        .mapTo('/bot')
+
     return { onion:
               xs.merge
               ( init$
@@ -282,6 +293,8 @@ const intent =
               , loginError$
               )
            , HTTP: xs.merge(loginRequest$)
+           , router: xs.merge(changeRoute$)
+           , storage: xs.merge(loginToken$)
            }
   }
 

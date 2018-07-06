@@ -1,6 +1,6 @@
 import { Stream } from 'xstream';
 import { DOMSource, VNode } from '@cycle/dom';
-import { StorageSource, StorageRequest } from '@cycle/storage';
+import { StorageSource, StorageRequest, ResponseCollection } from '@cycle/storage';
 import { HTTPSource, RequestOptions } from '@cycle/http';
 import { TimeSource } from '@cycle/time';
 import { RouterSource, HistoryAction } from 'cyclic-router';
@@ -12,7 +12,7 @@ export interface BaseSources {
   HTTP: HTTPSource
   time: TimeSource
   router: RouterSource
-  storage: StorageSource
+  storage: ResponseCollection //StorageSource
 }
 
 export interface BaseSinks {
