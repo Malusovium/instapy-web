@@ -9,6 +9,7 @@ export type ButtonStateColor =
 export type ColorPallete =
   { background: string
   , backgroundImage: string
+  , icon: string
   , mainButton: string
   , subButton: string
   , mainText: string

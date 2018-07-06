@@ -1,12 +1,14 @@
 import xs, { Stream } from 'xstream'
 import { div
        , input
+       , label
        , VNode
        , DOMSource 
        } from '@cycle/dom'
 import { StateSource } from 'cycle-onionify'
 // import isolate from '@cycle/isolate'
 
+import { path } from 'rambda'
 import { style, stylesheet } from 'typestyle'
 import * as csstips from 'csstips'
 
@@ -26,23 +28,19 @@ export interface Sinks extends BaseSinks {
   onion?: Stream<Reducer>
 }
 
-export interface Classes {
-  outer: string
-  inner: string
-  elem: string
-}
-
 export interface Transitions {
   outer: SnabbTransition | false
   inner: SnabbTransition | false
 }
 
 export type State =
-  { myNumber: number
+  { labelText: string
+  , value: string
   }
 
 export const defaultState: State =
-  { myNumber: 42
+  { labelText: 'label'
+  , value: ''
   }
 
 export type Reducer = (prev: State) => State | undefined
@@ -50,8 +48,17 @@ export type Reducer = (prev: State) => State | undefined
 const initReducer = (defaultState:any) =>
   (prev:any) => ({...defaultState, ...prev})
 
+export type Classes =
+  { outer: string
+  , inner: string
+  , label: string
+  , input: string
+  }
+
 export const Style = 
   ( { mainText
+    , subText
+    , mainButton
     } : ColorPallete
   ) =>
     stylesheet
@@ -61,9 +68,29 @@ export const Style =
         }
       , inner:
         { fontSize: '1em'
+        , display: 'flex'
+        , ...csstips.vertical
         }
-      , elem:
+      , label:
+        { fontSize: '.8em'
+        , color: subText
+        , paddingBottom: '.4rem'
+        }
+      , input:
         { fontSize: '1em'
+        , color: mainText
+        , padding: '.2em'
+        , borderRadius: '.2rem'
+        , borderStyle: 'none'
+        , boxShadow: `0 .2rem 0 0 ${subText}`
+        , $nest:
+          { '&:hover':
+            { boxShadow: `0 .2rem 0 0 ${mainButton}`
+            }
+          , '&:focus':
+            { boxShadow: `0 0 0 .2rem ${mainButton}`
+            }
+          }
         }
       }
     )
@@ -75,7 +102,7 @@ export const Transitions: Transitions =
     ( [ transition('opacity', 1)('0', { add: '1', rem: '0'} ) ] )
  }
 
-export const <Component> =
+export const InputText =
   (colors: ColorPallete) =>
     ({ DOM, onion}: Sources): Sinks => {
       const action$: Stream<Reducer> = intent(DOM)
@@ -91,18 +118,34 @@ export const <Component> =
     }
 
 const intent = (DOM: DOMSource): Stream<Reducer> => {
-  const init$ = xs.of<Reducer>(
-    initReducer(defaultState)
-  )
+  const init$ =
+    xs.of<Reducer>
+    ( initReducer(defaultState) )
 
-  return xs.merge(init$)
+  const input$ =
+    DOM
+      .select('input')
+      .events('input')
+      .map(path('target.value'))
+      .debug('value')
+      .map<Reducer>
+       ( (value:string) =>
+           (prev) => (
+             { ...prev
+             , value
+             }
+           )
+       )
+
+  return xs.merge(init$, input$)
 }
 
 const view = (css:Classes, trans:Transitions) =>
   (state$: Stream<State>): Stream<VNode> =>
     state$
       .map
-       ( ( { myNumber
+       ( ( { labelText
+           , value
            }
          ) =>
            div
@@ -111,7 +154,9 @@ const view = (css:Classes, trans:Transitions) =>
            , [ div
                (`.${css.inner}`
                , { style: trans.inner}
-               , div(`.${css.elem}`, `The answer, ${myNumber}`)
+               , [ label(`.${css.label}`, labelText)
+                 , input(`.${css.input}`, { props: { value: value } })
+                 ]
                )
              ]
            )

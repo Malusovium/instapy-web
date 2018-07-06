@@ -59,6 +59,7 @@ export const genButtonColors =
 
 const baseButton =
   { fontSize: '1em'
+  , fontWeight: 700
   , borderStyle: 'none'
   , padding: '.6rem'
   , color: 'white'

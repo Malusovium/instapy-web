@@ -1,12 +1,19 @@
 import xs, { Stream } from 'xstream'
+import sampleCombine from 'xstream/extra/sampleCombine'
 import { div
        , input
        , VNode
        , DOMSource 
        } from '@cycle/dom'
 import { StateSource } from 'cycle-onionify'
-// import isolate from '@cycle/isolate'
+import { HTTPSource } from '@cycle/http'
+import isolate from '@cycle/isolate'
 
+import { propEq
+       , pick
+       , path
+       , pluck
+       } from 'rambda'
 import { style, stylesheet } from 'typestyle'
 import * as csstips from 'csstips'
 
@@ -21,22 +28,18 @@ import { transition
 
 import { genButtonColors
        , genStylesheet 
-       , genButton
+       , genButton , ButtonState
        } from '../dom-helpers/button'
+
+import { InputText
+       , State as InputTextState
+       } from './input-text'
 
 export interface Sources extends BaseSources {
   onion: StateSource<State>
 }
 export interface Sinks extends BaseSinks {
-  onion?: Stream<Reducer>
-}
-
-export interface Classes {
-  outer: string
-  inner: string
-  userName: string
-  passWord: string
-  loginButton: string
+  onion?: Stream<Reducer | {}>
 }
 
 export interface Transitions {
@@ -44,12 +47,24 @@ export interface Transitions {
   inner: SnabbTransition | false
 }
 
-export interface State{
-  myNumber: number
-}
+export type State =
+  { buttonState: ButtonState
+  , errorMessage: string | false
+  , userName: InputTextState
+  , passWord: InputTextState
+  }
 
 export const defaultState: State =
-  { myNumber: 42
+  { buttonState: 'normal'
+  , errorMessage: false
+  , userName:
+    { labelText: 'Username'
+    , value: ''
+    }
+  , passWord:
+    { labelText: 'Password'
+    , value: ''
+    }
   }
 
 export type Reducer = (prev: State) => State | undefined
@@ -57,63 +72,76 @@ export type Reducer = (prev: State) => State | undefined
 const initReducer = (defaultState:any) =>
   (prev:any) => ({...defaultState, ...prev})
 
-export const Login = (css:Classes, trans:Transitions) =>
-  ({ DOM, onion}: Sources): Sinks => {
-    const action$: Stream<Reducer> = intent(DOM)
-    const vdom$: Stream<VNode> = view(css, trans)(onion.state$)
-
-    return { DOM: vdom$
-           , onion: action$
-           }
+export type Classes =
+  { outer: string
+  , inner: string
+  , logo: string
+  , logoText: string
+  , userName: string
+  , passWord: string
+  , error: string
   }
 
-const intent = (DOM: DOMSource): Stream<Reducer> => {
-  const init$ = xs.of<Reducer>(
-    initReducer(defaultState)
-  )
-
-  return xs.merge(init$)
-}
-
 export const LoginStyle = 
-  ( { color }
-    : { color: ColorPallete }
+  ( { backgroundImage
+    , background
+    , mainText
+    , icon
+    } : ColorPallete
   ) =>
-  stylesheet
-  ( { outer:
-      { fontSize: '1em'
-      , height: '100%'
-      , width: '100%'
-      , backgroundImage: color.backgroundImage
-      , backgroundSize: 'cover'
-      , paddingTop: '2rem'
-      , color: color.mainText
+    stylesheet
+    ( { outer:
+        { fontSize: '1em'
+        , fontFamily: `'Roboto', sans-serif`
+        , height: '100%'
+        , width: '100%'
+        , backgroundImage: backgroundImage
+        , backgroundSize: 'cover'
+        , paddingTop: '2rem'
+        , color: mainText
+        , position: 'fixed'
+        , overflowY: 'scroll'
+        , ...csstips.vertical
+        , alignItems: 'center'
+        , justifyContent: 'center'
+        }
+      , inner:
+        { fontSize: '1.5em'
+        , padding: '1em'
+        , borderRadius: '.4rem'
+        , marginLeft: 'auto' , marginRight: 'auto'
+        , width: '90%'
+        , maxWidth: '28rem'
+        , backgroundColor: background
+        , ...csstips.vertical
+        , ...csstips.content
+        , $nest:
+          { '> div':
+            { marginBottom: '1.4rem' }
+          }
+        }
+      , logo:
+        { backgroundImage: icon
+        , backgroundPosition: 'center center'
+        , backgroundRepeat: 'no-repeat'
+        , height: '6em'
+        }
+      , logoText:
+        { fontSize: '1.4em'
+        , fontWeight: 300
+        , textAlign: 'center'
+        }
+      , userName:
+        { fontSize: '1em'
+        }
+      , passWord:
+        { fontSize: '1em'
+        }
+      , error:
+        { fontSize: '.6em'
+        }
       }
-    , inner:
-      { fontSize: '1.5em'
-      , padding: '.6em'
-      , borderRadius: '.4rem'
-      , marginLeft: 'auto'
-      , marginRight: 'auto'
-      , width: '90%'
-      , maxWidth: '40rem'
-      , backgroundColor: color.background
-      }
-    , userName:
-      { fontSize: '1em'
-      }
-    , passWord:
-      { fontSize: '1em'
-      }
-    , loginButton:
-      { fontSize: '1em'
-      }
-    }
-  )
-
-// const wrapperTransition: Transition[] =
-//   [ transition('opacity')(1, 1)
-//   ]
+    )
 
 export const LoginTransitions: Transitions =
  { outer: false
@@ -122,31 +150,175 @@ export const LoginTransitions: Transitions =
     ( [ transition('opacity', 1)('0', { add: '1', rem: '0'} ) ] )
  }
 
+export const Login = (colors: ColorPallete) =>
+  ({ DOM, onion, HTTP}: Sources): Sinks => {
+    const userName$ =
+      isolate
+      ( InputText(colors)
+      , 'userName'
+      )({ DOM, onion })
+
+    const passWord$ =
+      isolate
+      ( InputText(colors)
+      , 'passWord'
+      )({ DOM, onion })
+
+    const action$ =
+      intent
+      ( DOM
+      , onion.state$
+      , HTTP
+      )
+    const vdom$: Stream<VNode> =
+      view
+      ( LoginStyle(colors)
+      , LoginTransitions
+      )( onion.state$
+       , userName$.DOM
+       , passWord$.DOM
+       )
+
+    return { DOM: vdom$
+           , onion:
+              xs.merge
+              ( action$.onion
+              , userName$.onion
+              , passWord$.onion
+              )
+           , HTTP: action$.HTTP
+           }
+  }
+
+const takeSecond =
+  (arr:any[]) => arr[1]
+
+const intent =
+  ( DOM: DOMSource
+  , state$: Stream<State>
+  , HTTP: HTTPSource
+  ) => {
+    const init$ =
+      xs.of<Reducer>
+      ( initReducer(defaultState) )
+
+    const loginClick$ =
+      DOM
+        .select('button')
+        .events('click')
+
+    const loginLoading$ =
+      loginClick$
+        .mapTo<Reducer>
+         ( (prev) => (
+             { ...prev
+             , buttonState: 'loading'
+             , errorMessage: false
+             }
+           )
+         )
+
+    const loginRequest$ =
+      loginClick$
+        .compose(sampleCombine(state$))
+        .map(takeSecond)
+        .debug('this')
+        .filter(propEq('buttonState', 'normal'))
+        .debug('this two')
+        .map(pick(['userName', 'passWord']))
+        .map(pluck('value'))
+        .map
+         ( ([ userName, passWord ]) => (
+             { url: `${process.env.BACK_URL}/api/login`
+             , category: 'login'
+             , method: 'POST'
+             , send:
+               { data:
+                 { userName
+                 , passWord
+                 }
+               }
+
+             }
+           )
+         )
+        // .take(1)
+
+    // type LoginResponse =
+    //   { error?: string
+    //   , token?: string
+    //   }
+
+    const loginResponse$ =
+      HTTP
+        .select('login')
+        .flatten()
+        .map(path('body'))
+        // .debug('response')
+        // .mapTo( (prev) => prev)
+
+    const loginNormal$ =
+      loginResponse$
+        .mapTo<Reducer>
+         ( (prev) => ({...prev, buttonState: 'normal'}))
+
+    const loginError$ =
+      loginResponse$
+        .filter(path('error'))
+        .map<Reducer>
+         ( ({error}) =>
+             (prev) => (
+               { ...prev
+               , errorMessage: error
+               }
+             )
+         )
+
+    return { onion:
+              xs.merge
+              ( init$
+              , loginLoading$
+              , loginNormal$
+              , loginError$
+              )
+           , HTTP: xs.merge(loginRequest$)
+           }
+  }
+
 const loginButton =
   (buttonColor:string) =>
     genButton
     ( genStylesheet
       ( genButtonColors
-        (buttonColor) 
+        (buttonColor)
       )
     )
 
 const view = (css:Classes, trans:Transitions) =>
-  (state$: Stream<State>): Stream<VNode> =>
-    state$
-      .map( ({ myNumber }) =>
-        div
-        ( `.${css.outer}`
-        , { style: trans.outer}
-        , [ div
-            (`.${css.inner}`
-            , { style: trans.inner}
-            , [ div(`.${css.userName}`, 'userName:')
-              , div(`.${css.passWord}`, 'passWord' )
-              , div(`.${css.loginButton}`, 'login button')
-              , loginButton('#7161ef')('normal')
-              ]
-            )
-          ]
-        )
-      )
+  (state$: Stream<State>, ...components: Stream<VNode>[]): Stream<VNode> =>
+    xs.combine(state$, ...components)
+      .map
+       ( ( [ { buttonState
+             , errorMessage
+             }
+           , userName
+           , passWord
+           ]
+         ) =>
+           div
+           ( `.${css.outer}`
+           , { style: trans.outer}
+           , [ div
+               (`.${css.inner}`
+               , { style: trans.inner}
+               , [ div(`.${css.logo}`)
+                 , div(`.${css.logoText}`, 'Instapy-Web')
+                 , userName
+                 , passWord
+                 , (errorMessage) ? div(`.${css.error}`, errorMessage) : undefined
+                 , loginButton('#7161ef')(buttonState, 'Login')
+                 ]
+               )
+             ]
+           )
+       )

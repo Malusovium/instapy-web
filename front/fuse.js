@@ -23,7 +23,7 @@ context
             // [ ImageBase64Plugin()
             [ CopyPlugin
               ( { useDefault: true
-                , files: ['*.png' ]
+                , files: ['*.png', '*.svg']
                 // , dest: 'assets'
                 }
               )
