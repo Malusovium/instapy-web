@@ -7,7 +7,7 @@ import { div
        } from '@cycle/dom'
 import { StateSource } from 'cycle-onionify'
 import { ResponseCollection } from '@cycle/storage'
-// import isolate from '@cycle/isolate'
+import isolate from '@cycle/isolate'
 
 import { style, stylesheet } from 'typestyle'
 import { color, rgb } from 'csx'
@@ -26,7 +26,7 @@ export interface Sources extends BaseSources {
   onion: StateSource<State>
 }
 export interface Sinks extends BaseSinks {
-  onion?: Stream<Reducer>
+  onion?: Stream<Reducer | {}>
 }
 
 export interface Transitions {
@@ -177,19 +177,36 @@ export const Transitions: Transitions =
     ( [ transition('opacity', 1)('0', { add: '1', rem: '0'} ) ] )
  }
 
+const dummyComponent =
+  (style:any) =>
+    (sources:Sources) => (
+      { DOM: xs.of(div('dummy'))
+      , onion: xs.of<Reducer>((prev) => prev)
+      , HTTP: xs.of()
+      }
+    )
+
 export const MainMenu =
-  (colors: ColorPallete) =>
-    ({ DOM, onion, storage}: Sources): Sinks => {
+  (colors: ColorPallete, scope: string, Component: any = dummyComponent) =>
+    ({ DOM, onion, storage, HTTP}: Sources): Sinks => {
+      const component$ =
+        isolate
+        ( Component(colors)
+        , scope
+        )({DOM, onion, storage, HTTP})
+
       const action$ = intent(DOM, storage)
       const vdom$: Stream<VNode> =
         view
         ( Style(colors)
         , Transitions
-        )(onion.state$)
+        )(onion.state$, component$.DOM)
 
       return { DOM: vdom$
-             , onion: action$.onion
+             , onion:
+                xs.merge(action$.onion, component$.onion)
              , router: action$.router
+             , HTTP: component$.HTTP
              }
     }
 
@@ -213,17 +230,28 @@ const intent =
           )
         )
 
-    const close$ =
+    const closeClick$ =
       DOM
         .select('.close')
         .events('click')
-        .mapTo<Reducer>
-        ( (prev) => (
-            { ...prev
-            , showItems: false
-            }
-          )
-        )
+
+    const changeBot$ =
+      DOM
+        .select('.bot')
+        .events('click')
+        .mapTo('/bot')
+
+    const changeConfig$ =
+      DOM
+        .select('.config')
+        .events('click')
+        .mapTo('/config')
+
+    const changeLogs$ =
+      DOM
+        .select('.logs')
+        .events('click')
+        .mapTo('/logs')
 
     const logoutClick$ =
       DOM
@@ -233,6 +261,21 @@ const intent =
     const changeLogin$ =
       logoutClick$
         .mapTo('/login')
+
+    const close$ =
+      xs.merge
+      ( closeClick$
+      , changeLogin$
+      , changeBot$
+      , changeConfig$
+      , changeLogs$
+      ).mapTo<Reducer>
+        ( (prev) => (
+            { ...prev
+            , showItems: false
+            }
+          )
+        )
 
     const token$ =
       storage
@@ -247,8 +290,20 @@ const intent =
              )
          )
 
-    return { onion: xs.merge(init$, token$, open$, close$)
-           , router: xs.merge(changeLogin$)
+    return { onion:
+              xs.merge
+              ( init$
+              , token$
+              , open$
+              , close$
+              )
+           , router:
+              xs.merge
+              ( changeLogin$
+              , changeBot$
+              , changeConfig$
+              , changeLogs$
+              )
            }
   }
 
@@ -270,12 +325,14 @@ const menuItems =
 
 
 const view = (css:Classes, trans:Transitions) =>
-  (state$: Stream<State>): Stream<VNode> =>
-    state$
+  (state$: Stream<State>, componentDom$:any): Stream<VNode> =>
+    xs.combine(state$, componentDom$)
       .map
-       ( ( { showItems
-           , token
-           }
+       ( ( [ { showItems
+             , token
+             }
+           , component
+           ]
          ) =>
            div
            ( `.${css.outer}`
@@ -286,7 +343,6 @@ const view = (css:Classes, trans:Transitions) =>
                , [ div
                    ( `.${css.menu}`
                    , [ div(`.${css.logo}`)
-                     // , menuItems(css)
                      , showItems
                         ? div(`.${css.burger}.close`, i('.im.im-x-mark'))
                         : div(`.${css.burger}.open`, i('.im.im-menu'))
@@ -294,7 +350,7 @@ const view = (css:Classes, trans:Transitions) =>
                    )
                  , showItems
                     ? menuItems(css)
-                    : div(`.${css.content}`, 'content')
+                    : div(`.${css.content}`, component)
                  ]
                )
              ]

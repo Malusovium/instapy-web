@@ -26,17 +26,6 @@ export interface Sinks extends BaseSinks {
   onion?: Stream<Reducer>
 }
 
-export interface Classes {
-  outer: string
-  inner: string
-  elem: string
-}
-
-export interface Transitions {
-  outer: SnabbTransition | false
-  inner: SnabbTransition | false
-}
-
 export type State =
   { myNumber: number
   }
@@ -49,6 +38,12 @@ export type Reducer = (prev: State) => State | undefined
 
 const initReducer = (defaultState:any) =>
   (prev:any) => ({...defaultState, ...prev})
+
+export type Classes =
+  { outer: string
+  , inner: string
+  , elem: string
+  }
 
 export const Style = 
   ( { mainText
@@ -67,6 +62,11 @@ export const Style =
         }
       }
     )
+
+export type Transitions =
+  { outer: SnabbTransition | false
+  , inner: SnabbTransition | false
+  }
 
 export const Transitions: Transitions =
  { outer: false

@@ -8,9 +8,6 @@ import { driverNames } from '../drivers'
 import { BaseSources, BaseSinks } from '../interfaces'
 import { RouteValue, routes, initialRoute } from '../routes'
 
-import { State as CounterState } from './counter'
-import { State as SpeakerState } from './speaker'
-
 // Typestyle setup
 import { setupPage, normalize } from 'csstips'
 normalize()
@@ -25,8 +22,8 @@ export interface Sinks extends BaseSinks {
 
 // State
 export interface State {
-  counter?: CounterState
-  speaker?: SpeakerState
+  // counter?: CounterState
+  // speaker?: SpeakerState
 }
 export const defaultState: State = {
   counter: { count: 5 },

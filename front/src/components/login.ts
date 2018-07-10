@@ -27,9 +27,8 @@ import { transition
        , SnabbTransition
        } from '../utils/snabb-transitions'
 
-import { genButtonColors
-       , genStylesheet 
-       , genButton , ButtonState
+import { Button
+       , ButtonState
        } from '../dom-helpers/button'
 
 import { InputText
@@ -92,13 +91,13 @@ export const LoginStyle =
   ) =>
     stylesheet
     ( { outer:
-        { fontSize: '1em'
+        { fontSize: '.8em'
         , fontFamily: `'Roboto', sans-serif`
         , height: '100%'
         , width: '100%'
         , backgroundImage: backgroundImage
         , backgroundSize: 'cover'
-        , paddingTop: '2rem'
+        , paddingTop: '2em'
         , color: mainText
         , position: 'fixed'
         , overflowY: 'scroll'
@@ -298,15 +297,6 @@ const intent =
            }
   }
 
-const loginButton =
-  (buttonColor:string) =>
-    genButton
-    ( genStylesheet
-      ( genButtonColors
-        (buttonColor)
-      )
-    )
-
 const view = (css:Classes, trans:Transitions) =>
   (state$: Stream<State>, ...components: Stream<VNode>[]): Stream<VNode> =>
     xs.combine(state$, ...components)
@@ -328,8 +318,10 @@ const view = (css:Classes, trans:Transitions) =>
                  , div(`.${css.logoText}`, 'Instapy-Web')
                  , userName
                  , passWord
-                 , (errorMessage) ? div(`.${css.error}`, errorMessage) : undefined
-                 , loginButton('#7161ef')(buttonState, 'Login')
+                 , (errorMessage)
+                     ? div(`.${css.error}`, errorMessage)
+                     : undefined
+                 , Button('#7161ef')(buttonState, 'Login')
                  ]
                )
              ]

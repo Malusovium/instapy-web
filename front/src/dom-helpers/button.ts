@@ -5,6 +5,7 @@ import { color
        , rgb
        } from 'csx'
 import { button
+       , VNode
        } from '@cycle/dom'
 
 export type ButtonState =
@@ -200,10 +201,20 @@ const loadingIcon =
 
 export const genButton =
   (css: ButtonStylesheet) =>
-    (buttonState: ButtonState, text = 'submit') =>
+    (buttonState: ButtonState, inner: VNode | string, selector = '') =>
       button
-      ( `.${css[buttonState]}`
+      ( `.${css[buttonState]} ${selector}`
       , buttonState === 'loading'
           ? { props: { innerHTML: loadingIcon } }
-          : text
+          : inner
       )
+
+export const Button =
+  (buttonColor:string) =>
+    genButton
+    ( genStylesheet
+      ( genButtonColors
+        (buttonColor)
+      )
+    )
+

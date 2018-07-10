@@ -106,8 +106,35 @@ const stop =
         wrappedExec( dockerCompose('stop') )
       ).catch(catchDone)
 
+const revArr =
+  (arr: any[]) =>
+    arr.reduce
+    ( (arr, curr) => [...arr, curr], [])
+
+const splitStringAt =
+  (delimiter: string) =>
+    (str: string) =>
+      str.split(delimiter)
+
+const takeLastN =
+  (n: number) =>
+    (arr:string[]) =>
+      (arr.length <= n)
+        ? arr
+        : arr
+            .reverse()
+            .slice(0, n)
+            .reverse()
+
+const logs =
+  () =>
+    wrappedExec( dockerCompose('logs', 'web') )
+      .then(splitStringAt('\n'))
+      .then(takeLastN(30))
+
 export const bot =
   { start
   , stop
   , status
+  , logs
   }

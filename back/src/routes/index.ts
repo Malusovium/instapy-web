@@ -11,6 +11,7 @@ import startBot from './bot-start'
 import stopBot from './bot-stop'
 import statusBot from './bot-status'
 import botConfig from './bot-config'
+import logsBot from './bot-logs'
 
 const apiRouter = new Router()
 
@@ -51,6 +52,7 @@ apiRouter
   .get('/bot-start', koaBody(), startBot.get)
   .get('/bot-stop', koaBody(), stopBot.get)
   .get('/bot-status', koaBody(), statusBot.get)
+  .get('/bot-logs', koaBody(), logsBot.get)
   .get('/bot-config', koaBody(), botConfig.get)
   .post('/bot-config', koaBody(), botConfig.post)
   .get('/test', koaBody(), test.get)

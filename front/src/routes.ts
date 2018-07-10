@@ -2,8 +2,11 @@ import { Component } from './interfaces'
 
 import mainBackground from './assets/main-background.png'
 import iconLogo from './assets/instapy-web-icon-filled-white.svg'
-import { Login } from './components/login'
+
 import { MainMenu } from './components/main-menu'
+import { Login } from './components/login'
+import { Bot } from './components/bot'
+import { Logs } from './components/logs'
 
 export type RouteValue =
   { component: Component
@@ -29,8 +32,16 @@ export const routes: Routes =
     , scope: 'login'
     }
   , '/bot':
-    { component: MainMenu(style)
-    , scope: 'bot'
+    { component: MainMenu(style, 'bot', Bot)
+    , scope: 'mainMenu'
+    }
+  , '/config':
+    { component: MainMenu(style, 'config')
+    , scope: 'mainMenu'
+    }
+  , '/logs':
+    { component: MainMenu(style, 'logs', Logs)
+    , scope: 'mainMenu>'
     }
   // , '/p2': { component: Speaker, scope: 'speaker' }
   }
