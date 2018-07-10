@@ -1,6 +1,7 @@
 import * as Koa from 'koa'
 import * as Router from 'koa-router'
 import * as serve from 'koa-static'
+import * as send from 'koa-send'
 import * as koaBody from 'koa-body'
 import * as cors from '@koa/cors'
 
@@ -10,20 +11,40 @@ const PORT = 3000
 const app = new Koa()
 const indexRouter = new Router()
 
+const leftDirN =
+  (n: number) =>
+    (str: string) =>
+      str.split('/')
+        .reverse()
+        .splice(0, n)
+        .reverse()
+        .join('/')
+
+const sendIndex =
+  async (ctx: any) =>
+    await send
+          ( ctx
+          , '/front/build/index.html'
+          , { root: __dirname + '/../..' }
+          // , leftDirN(2)(__dirname) + '/front/build/index.html'
+          )
+
 indexRouter
+  .redirect('/', '/login')
+  .get( '/login', sendIndex)
+  .get( '/bot', sendIndex)
+  .get( '/config', sendIndex)
+  .get( '/logs', sendIndex)
   .use( '/api'
       , apiRouter.routes()
       , apiRouter.allowedMethods()
       )
 
 app
-  .use( cors( { origin: '*'
-              }
-            )
-      )
-  .use(serve(__dirname + '/../../front/build'))
+  .use( cors({ origin: '*' }) )
   .use(indexRouter.routes())
   .use(indexRouter.allowedMethods())
+  .use(serve(__dirname + '/../../front/build'))
 
 app.listen(PORT)
 

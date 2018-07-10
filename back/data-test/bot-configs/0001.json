@@ -1,1 +1,0 @@
-{"settings":{"sleepReduce":{"percentage":"150"},"doFollow":{"enabled":"True","percentage":"5"},"dontLike":{"arr":[]},"ignoreIfContains":{"arr":["sex","cats","dogs","animals","nsfw"]},"lowerFollowerCount":{"limit":"2000"},"upperFollowerCount":{"limit":"5000"}},"commands":{"likeByTags":{"arr":["wooah!"],"amount":"100","media":"Video"}}}

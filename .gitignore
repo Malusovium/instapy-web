@@ -3,4 +3,5 @@ data
 .fusebox
 build
 *bcrypt-hashes.json
+*instapy-api.json
 
