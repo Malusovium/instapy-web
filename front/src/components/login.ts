@@ -112,8 +112,7 @@ export const LoginStyle =
         , marginLeft: 'auto' , marginRight: 'auto'
         , width: '90%'
         , maxWidth: '28rem'
-        , backgroundColor: background
-        , ...csstips.vertical
+        , backgroundColor: background , ...csstips.vertical
         , ...csstips.content
         , $nest:
           { '> div':
@@ -280,6 +279,23 @@ const intent =
            )
          )
 
+    const clearUserCredentials$ =
+      loginToken$
+        .mapTo
+         ( (prev) => (
+             { ...prev
+             , userName:
+               { ...prev.userName
+               , value: ''
+               }
+             , passWord:
+               { ...prev.passWord
+               , value: ''
+               }
+             }
+           )
+         )
+
     const changeRoute$ =
       loginToken$
         .mapTo('/bot')
@@ -290,6 +306,7 @@ const intent =
               , loginLoading$
               , loginNormal$
               , loginError$
+              , clearUserCredentials$
               )
            , HTTP: xs.merge(loginRequest$)
            , router: xs.merge(changeRoute$)
