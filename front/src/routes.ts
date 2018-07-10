@@ -41,7 +41,7 @@ export const routes: Routes =
     }
   , '/logs':
     { component: MainMenu(style, 'logs', Logs)
-    , scope: 'mainMenu>'
+    , scope: 'mainMenu'
     }
   // , '/p2': { component: Speaker, scope: 'speaker' }
   }
