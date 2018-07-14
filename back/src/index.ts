@@ -11,22 +11,12 @@ const PORT = 3000
 const app = new Koa()
 const indexRouter = new Router()
 
-const leftDirN =
-  (n: number) =>
-    (str: string) =>
-      str.split('/')
-        .reverse()
-        .splice(0, n)
-        .reverse()
-        .join('/')
-
 const sendIndex =
   async (ctx: any) =>
     await send
           ( ctx
           , '/front/build/index.html'
           , { root: __dirname + '/../..' }
-          // , leftDirN(2)(__dirname) + '/front/build/index.html'
           )
 
 indexRouter

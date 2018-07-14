@@ -7,6 +7,8 @@
     "dev": "ts-node-dev src/index.ts",
     "start": "NODE_ENV=production ts-node src/index.ts",
     "test": "ava-ts src/**/*-test.ts -w",
+    "gen-api": "ts-node ./gen-instapy-api.ts",
+    "gen-api:dev": "ts-node-dev ./gen-instapy-api.ts",
     "compile": "tsc --outDir ./dist"
   },
   "author": "Malusovium",
@@ -22,7 +24,7 @@
     "koa-static": "^5.0.0",
     "lowdb": "^1.0.0",
     "rambda": "^1.1.4",
-    "ts-node": "^6.1.2",
+    "ts-node": "^6.0.0",
     "typescript": "^2.9.2"
   },
   "devDependencies": {

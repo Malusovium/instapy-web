@@ -14,12 +14,13 @@
     "allowJs": true,
     "lib": [
       "esnext",
+      "ES2015",
       "ES7",
       "ES6",
       "ES5",
       "DOM"
     ]
   },
-  "include": ["src/**/*.ts"],
+  // "include": ["src#<{(||)}>#*.ts"],
   "exclude": ["node_modules", "build"]
 }
