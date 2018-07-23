@@ -111,7 +111,8 @@ export const LoginStyle =
         , borderRadius: '.4rem'
         , marginLeft: 'auto' , marginRight: 'auto'
         , width: '90%'
-        , maxWidth: '28rem'
+        , maxWidth: '24rem'
+        , boxShadow: '0 0 20em 4em #d8a'
         , backgroundColor: background , ...csstips.vertical
         , ...csstips.content
         , $nest:
