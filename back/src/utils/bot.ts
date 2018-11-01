@@ -106,6 +106,10 @@ const stop =
         wrappedExec( dockerCompose('stop') )
       ).catch(catchDone)
 
+const logs =
+  () =>
+    Promise.resolve(['some first data', 'some second line'])
+
 export const bot =
   { start
   , stop
