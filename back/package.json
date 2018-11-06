@@ -14,12 +14,13 @@
   "author": "Malusovium",
   "license": "MIT",
   "dependencies": {
-    "bcrypt": "^2.0.1",
+    "bcrypt": "^3.0.2",
     "jsonwebtoken": "^8.3.0",
     "lowdb": "^1.0.0",
     "rambda": "^1.1.5",
     "ts-node": "^6.0.0",
-    "typescript": "^2.9.2"
+    "typescript": "^2.9.2",
+    "ws": "^6.1.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^2.0.0",
@@ -27,8 +28,14 @@
     "@types/lowdb": "^1.0.4",
     "@types/node": "^10.5.2",
     "@types/shortid": "0.0.29",
+    "@types/ws": "^6.0.1",
+    "ava": "^0.25.0",
     "ava-ts": "^0.24.6",
     "koa-body": "^4.0.4",
     "ts-node-dev": "^1.0.0-pre.26"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.0",
+    "utf-8-validate": "^5.0.1"
   }
 }
