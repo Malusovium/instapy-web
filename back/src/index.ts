@@ -1,18 +1,24 @@
 import { run } from '@cycle/run'
 import { makeMessageDriver
        , InternalMessage
-       , MessageDriverSinks
-       , MessageDriverSources
+       , MessageSink
+       , MessageSource
        } from './drivers/message'
+import { AuthSource
+       , AuthSink
+       , makeAuthDriver
+       } from './drivers/auth'
 
 import delay from 'xstream/extra/delay'
 import xs, { Stream } from 'xstream'
 
 type Sources =
-  { message: MessageDriverSinks
+  { message: MessageSource
+  , auth: AuthSource
   }
 type Sinks =
-  { message?: MessageDriverSources
+  { message?: MessageSink
+  , auth?: AuthSink
   }
 
 type Component =
@@ -32,18 +38,22 @@ const ROUND_ROBIN =
   }
 
 const main: Component =
-  (sources) => {
-    const roundTrip$ = sources.message.all$
-      .map<InternalMessage>( ({_self}) => ({_self: {..._self, _to: 'SELF'}, TYPE: 'HENK!'}))
+  ({ message, auth }) => {
+    const roundTrip$ = message.all$
       .debug('well?')
-    // const token$ =
-    //   xs.of(TOKEN)
-    //     .compose(delay(10000))
+      .map<InternalMessage>( ({_self}) => ({_self: {..._self, _to: 'SELF'}, TYPE: 'HENK!'}))
 
     return (
-      { message: xs.merge(roundTrip$)
+      { message: xs.merge(roundTrip$, auth.jwt$)
+      , auth: xs.merge(message.pick('LOGIN'))
+      // , auth: xs.merge(message.pick('LOGIN').debug('came here?'))
       }
     )
   }
 
-run(main, {message: makeMessageDriver(8080) })
+run
+( main
+, { message: makeMessageDriver(8080)
+  , auth: makeAuthDriver()
+  }
+)

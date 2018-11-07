@@ -1,6 +1,15 @@
 import * as WebSocket from 'ws'
-import {omit} from 'rambda'
+import { omit
+       , compose
+       } from 'rambda'
 import xs, {Stream} from 'xstream'
+
+import { InternalDATA
+       , InternalSelf
+       , CONNECTION_UID
+       } from './types'
+
+import { onlyAction } from './../utils/message-helpers'
 
 const wsOptions =
   { port: 8080
@@ -8,11 +17,14 @@ const wsOptions =
 
 const wss = new WebSocket.Server(wsOptions)
 
-type User = string
-type Group = string
+type Message =
+  { TYPE: string
+  , DATA?: any
+  }
 
-type CONNECTION_UID =
-  string
+type InternalMessage =
+  InternalSelf
+  & Message
 
 type AddInternalData =
   (internalDATA: InternalDATA) =>
@@ -29,19 +41,15 @@ type RemoveInternalData =
 const removeInternalData: RemoveInternalData =
   (message) => omit('_self', message)
 
-type Message =
-  { TYPE: string
-  , DATA?: any
-  }
-
-type InternalDATA =
-  { _UID: string
-  , _to?: 'ALL' | 'SELF'
-  }
-
-type InternalMessage =
-  { _self: InternalDATA
-  } & Message
+type HandleIncommingMessages =
+  (UID:CONNECTION_UID, listener:any) => (message:string) => void
+const handleIncommingMessages: HandleIncommingMessages =
+  (UID, listener) =>
+    compose
+    ( (message:InternalMessage) => { listener.next(message) }
+    , addInternalData({_to: 'SELF', _UID: UID})
+    , JSON.parse
+    )
 
 type SendMessage =
   (ws:any) => (message: InternalMessage) => void
@@ -51,65 +59,6 @@ const sendMessage: SendMessage =
       const JSONMessage = JSON.stringify(message)
       ws.send(JSONMessage, (err:any) => { console.log(err)})
     }
-
-type MessageQueue =
-  any[]
-let messageQueue: MessageQueue =
-  []
-
-type PushMessageQueue =
-  (_connectionUID: CONNECTION_UID) => (message: string) => void
-const pushMessageQueue: PushMessageQueue =
-  (_connectionUID) =>
-    (message) => {
-      const inMessage: InternalMessage =
-        { ...JSON.parse(message)
-        , _self:
-          { _UID: _connectionUID
-          , _to: 'SELF'
-          }
-        }
-      messageQueue.push(inMessage)
-    }
-
-type MessageProducerId = any
-let messageProducerId: MessageProducerId = 0
-
-const sendMessageQueue =
-  (listener:any) => {
-    if(messageQueue.length <= 0) {
-      return
-    } else {
-      const nextMessage = messageQueue.shift()
-      listener.next(nextMessage)
-      sendMessageQueue(listener)
-    }
-  }
-
-type MessageProducer =
-  { start: (listener:any) => void
-  , stop: () => void
-  }
-let messageProducer: MessageProducer =
-  { start:
-      (listener) => {
-        messageProducerId =
-          setInterval
-          ( () => {
-              if(messageQueue.length <= 0) {
-                return
-              } else {
-                sendMessageQueue(listener)
-              }
-            }
-          , 100
-          )
-      }
-  , stop:
-      () => {
-        clearInterval(messageProducerId)
-      }
-  }
 
 type MayHaveMessage =
   (UID: CONNECTION_UID) =>
@@ -121,47 +70,81 @@ const mayHaveMessage: MayHaveMessage =
       : _self._to === 'SELF' ? _self._UID === UID
       : false
 
-type MessageDriverSources = Stream<InternalMessage>
-type MessageDriverSinks =
+type MayHaveError = (message: InternalMessage) => boolean
+const mayHaveError: MayHaveError =
+  ({ TYPE, _self}) =>
+    TYPE !== 'ERROR'
+      ? true
+      : _self._show === true
+
+type MessageProducer =
+  { start: (listener:any) => void
+  , stop: () => void
+  }
+
+type MessageSink = Stream<InternalMessage>
+type PickEvent = (messageType: string) => Stream<any>
+type MessageSource =
   { all$: Stream<InternalMessage>
+  , pick: PickEvent
   }
 type MakeMessageDriver =
   (port:number) =>
-    (actions$: MessageDriverSources) =>
-      MessageDriverSinks
+    (actions$: MessageSink) =>
+      MessageSource
 const makeMessageDriver: MakeMessageDriver =
   (port) =>
     (actions$) => {
-      const connection =
-        (ws:any, req:any) => {
-          const UID = Date.now().toString(16)
-          actions$
-            .filter(mayHaveMessage(UID))
-            .addListener
-             ( { next: sendMessage(ws)
-               }
-             )
 
-          ws.on('message', pushMessageQueue(UID))
+      const messageProducer: MessageProducer =
+        { start: (listener) => {
+            wss
+              .on
+               ( 'connection'
+               , (ws:any, req:any) => {
+                   const UID = Date.now().toString(16)
+                   actions$
+                     .filter(mayHaveMessage(UID))
+                     .map(removeInternalData)
+                     .addListener
+                      ( { next: sendMessage(ws)
+                        , error: (err) => { console.log(err) }
+                        }
+                      )
+
+                   ws
+                     .on
+                      ( 'message'
+                      , handleIncommingMessages(UID, listener)
+                      )
+                 }
+               )
+          }
+        , stop: () => {
+            console.log(`Not yet implemented`)
+          }
         }
 
-      wss
-        .on
-         ( 'connection'
-         , connection
-         )
+      const messages$: Stream<InternalMessage> =
+        xs.create(messageProducer)
 
-      const messages$: Stream<InternalMessage> = xs.create(messageProducer)
+      const pickEvent: PickEvent =
+        (messageType) =>
+          onlyAction
+          ( messageType )
+          ( messages$ )
 
       return (
         { all$: messages$
+        , pick: pickEvent
         }
       )
     }
 
 export
-  { MessageDriverSinks
-  , MessageDriverSources
+  { MessageSink
+  , MessageSource
   , InternalMessage
+  , InternalDATA
   , makeMessageDriver
   }
