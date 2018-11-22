@@ -57,7 +57,14 @@ const sendMessage: SendMessage =
   (ws) =>
     (message) => {
       const JSONMessage = JSON.stringify(message)
-      ws.send(JSONMessage, (err:any) => { console.log(err)})
+      ws.send
+         ( JSONMessage
+         , (err:any) => {
+             if (err !== undefined) {
+               console.error(err)
+             }
+           }
+         )
     }
 
 type MayHaveMessage =
