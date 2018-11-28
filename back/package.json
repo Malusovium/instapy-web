@@ -22,6 +22,7 @@
     "rambda": "^1.2.6",
     "ts-node": "^6.0.0",
     "typescript": "^2.9.2",
+    "uuid": "^3.3.2",
     "ws": "^6.1.0",
     "xstream": "^11.7.0"
   },
@@ -31,10 +32,12 @@
     "@types/lowdb": "^1.0.4",
     "@types/node": "^10.5.2",
     "@types/shortid": "0.0.29",
+    "@types/uuid": "^3.4.4",
     "@types/ws": "^6.0.1",
     "ava": "^0.25.0",
     "ava-ts": "^0.24.6",
     "koa-body": "^4.0.4",
+    "parcel-bundler": "^1.10.3",
     "ts-node-dev": "^1.0.0-pre.26",
     "tsconfig-paths": "^3.7.0"
   },

@@ -2,13 +2,12 @@ import { promises } from 'fs'
 
 const { readFile } = promises
 
-// not safe file sending
 const sendStatic =
-  (filePath: string) =>
+  (filePath: string, encoding: string | null = 'utf8') =>
     async () =>
       readFile
       ( filePath
-      , 'utf8'
+      , encoding
       )
       .catch
        ( (err) => {

@@ -1,9 +1,10 @@
 import { Route } from 'utils/router'
+import { login } from './login'
 
 const routes: Route =
   { sub:
     { 'login':
-      { POST: async () => 'login Route'
+      { POST: login
       }
     }
   , '*': async () => 'default api route'

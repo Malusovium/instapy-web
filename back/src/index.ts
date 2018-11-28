@@ -1,8 +1,17 @@
 import { createServer } from 'http'
+import * as WebSocket from 'ws'
+import { reduce } from 'rambda'
 // import { sendStatic } from './utils/static'
 import { routes as apiRoutes } from './routes'
 import { makeRouter } from 'utils/router'
 import { sendStatic } from 'utils/static'
+import { makeSocket } from './socket'
+
+const sendFrontFile =
+  (fileName: string, encoding: string | null = 'utf8') => (
+    { GET: sendStatic(`${__dirname}/../../front/build/${fileName}`, encoding)
+    }
+  )
 
 const corsHeaders =
   { 'Access-Control-Allow-Origin': '*'
@@ -17,63 +26,39 @@ const handleCorsePreflightRequest =
     }
   }
 
-const declaredRoutes =
-  { '/':
-    { 'GET':
-        async (req:any) => {
-          const result = 'this'
-          return 'Well well well'
-        }
+const serveIndexHTML =
+  sendFrontFile('index.html')
+
+const frontRoutes =
+  [ 'login'
+  , 'logs'
+  , 'bot-config'
+  ]
+
+const makeFrontRoutes =
+  reduce
+  ( (acc, curr: string) => ({...acc, [curr]: serveIndexHTML})
+  , { 'index': serveIndexHTML
+    , 'index.html': serveIndexHTML
     }
-  , '/*':
-    { 'GET':
-        async (req:any) => 'Error 404 resource not found'
-    }
-  }
+  )
 
-// const router =
-//   (routes: any) =>
-//     async (req:any) => {
-//       if ( routes !== undefined && typeof routes['/*'] === 'function') {
-//         if ( routes[req.url] !== undefined
-//              && typeof routes[req.url][req.method] === 'function'
-//            ) {
-//           return routes[req.url][req.method](req)
-//         } else {
-//           return routes['/*'](req)
-//         }
-//       } else {
-//         return Promise.resolve('No route found.')
-//       }
-//     }
-//
-// const staticRouter =
-//   (files: any, exceptPath: string) =>
-//     async (req:any) => {
-//       if ( files !== undefined && typeof files['/*'] === 'string' ) {
-//         if (!req.url.startsWith(exceptPath)) {
-//           if ( typeof files[req.url] === 'string') {
-//             return sendStatic(files[req.url])
-//           } else {
-//             return Promise.reject('No Static files found')
-//           }
-//         } else {
-//           return Promise.reject('Url is exception path')
-//         }
-//       } else {
-//         return Promise.reject('No files specified')
-//       }
-//     }
-
-// const fileList =
-//   { '/': './index.html'
-//   , '/*': './index.html'
-//   }
-
-// const routeApi = apiRouter(declaredRoutes, '/api')
 const routes =
   { sub:
     { 'api': apiRoutes
+    , 'index': serveIndexHTML
+    , 'index.html': serveIndexHTML
+    , 'app.js': sendFrontFile('app.js')
+    , 'api.js': sendFrontFile('api.js')
+    , 'assets':
+      { sub:
+        { 'c6ec0150-background.png':
+          sendFrontFile(`assets/c6ec0150-background.png`, null)
+        , 'e8d20fff-instapy-web-icon-filled-white.svg':
+          sendFrontFile(`assets/e8d20fff-instapy-web-icon-filled-white.svg`)
+        }
+      }
+    , ...makeFrontRoutes(frontRoutes)
     }
   , GET: sendStatic(`${__dirname}/../../front/build/index.html`)
   }
@@ -81,20 +66,23 @@ const routes =
 const router =
   makeRouter(routes)
 
-console.log(__dirname)
-
 const handleRequest =
   (req: any, res: any) => {
     handleCorsePreflightRequest(req, res)
 
     const route = router(req)
-      // (declaredRoutes)
-      // (req)
 
     route(req)
       .then
        ( (mess) => {
-         console.log(mess)
+         console.log(req.url, mess)
+         if (req.url.endsWith('.png')){
+           res.writeHead
+               ( 200
+               , { 'Content-Type': 'image/png'
+                 }
+               )
+         }
          res.write(mess)
        })
       .catch
@@ -107,21 +95,10 @@ const handleRequest =
            res.end()
          }
        )
-      // .then
-      //  ( (message: string) => {
-      //      res.write(message)
-      //      res.end()
-      //    }
-      //  )
-    // const path = Url.parse(req.pathg)
-    console.log(req.url)
-
-    // console.log(req.headers)
-    // console.log(req)
-    // res.write(message)
-    // res.end()
   }
 
+const wss = new WebSocket.Server({ noServer: true})
 const server = createServer(handleRequest)
+server.on('upgrade', makeSocket(wss))
 
 server.listen(8080)
