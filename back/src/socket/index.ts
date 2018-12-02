@@ -4,65 +4,103 @@ import { makeMessageDriver
        // , MessageSink
        // , MessageSource
        } from './drivers/message'
+import { makeAuthDriver } from './drivers/auth'
 import delay from 'xstream/extra/delay'
 import xs, { Stream } from 'xstream'
 
+import { setupSessionHandler } from './session-handler'
+
+import
+  { compose
+  , isNil
+  , complement
+  } from 'rambda'
+
+import { Login } from './components/login'
+
 type Sources =
-  { message: any//MessageSource
+  { message$: any//MessageSource
+  , auth$: any
   }
 type Sinks =
-  { message?: any//MessageSink
+  { message$?: any//MessageSink
+  , auth$?: any
   }
 
 type Component =
   (sources: Sources) => Sinks
 
-const TOKEN =
-  { TYPE: 'TOKEN'
-  , _to: 'All'
-  , DATA: { key: 'my-key' }
-  }
-
-const ROUND_ROBIN =
-  { TYPE: 'ROUND_ROBIN'
-  , _to: 'All'
-  , DATA:
-    { timeStamp: 'right meow' }
-  }
-
-const main: Component =
-  ({ message }) => {
-    const roundTrip$ = message
-      .debug('well?')
-      // .map<InternalMessage>( ({_self}) => ({_self: {..._self, _to: 'SELF'}, TYPE: 'HENK!'}))
-
-    return (
-      { message: xs.merge(roundTrip$)
-      }
-    )
-  }
-
-const makeSocket =
-  (wss:any) => {
-    run
-    ( main
-    , { message: makeMessageDriver(wss)
-      }
-    )
-
-    return (request:any, socket:any, head:any) => {
-      wss
-        .handleUpgrade
-         ( request
-         , socket
-         , head
-         , (ws:any) => {
-             wss.emit('connection', ws, request)
-           }
-         )
+const JSONParse =
+  (jsonString: string) => {
+    try {
+      const parsedJSON = JSON.parse(jsonString)
+      return parsedJSON
+    } catch {
+      return null
     }
   }
 
+const isNotNil = complement(isNil)
+
+type Message = string | number
+const makeJSONMessage =
+  (message$: Stream<Message>) => {
+    const jsonMessage$ =
+      message$
+        .map(JSONParse)
+    const filteredJSONMessage$ =
+      jsonMessage$
+        .filter(isNotNil)
+    const error$ =
+      jsonMessage$
+        .filter(isNil)
+        .mapTo(`Bad message`)
+
+    return (
+      { message$
+      , error$
+      }
+    )
+  }
+
+const main: Component =
+  ({ message$, auth$ }) => {
+    const JSONMessage = makeJSONMessage(message$)
+    const roundTrip$ = message$
+      .debug('well?')
+    const login =
+      Login
+      ( { message$: JSONMessage.message$
+        , auth$
+        }
+      )
+
+    return (
+      { message$:
+          xs.merge
+             ( roundTrip$
+             , login.message$
+             , JSONMessage.error$
+             )
+      , auth$: xs.merge(login.auth$)
+      }
+    )
+  }
+
+const createSession =
+  (ws:any, sessionID: string) => {
+    const terminateSession =
+      run
+      ( main
+      , { message$: makeMessageDriver(ws)
+        , auth$: makeAuthDriver()
+        }
+      )
+
+    return terminateSession
+  }
+
 export
-  { makeSocket
+  { createSession
+  , setupSessionHandler
   }

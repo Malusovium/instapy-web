@@ -2,12 +2,10 @@ import { createServer } from 'http'
 import * as WebSocket from 'ws'
 import { reduce } from 'rambda'
 // import { sendStatic } from './utils/static'
-// import { routes as apiRoutes } from './routes'
+import { routes as apiRoutes } from './routes'
 import { makeRouter } from 'utils/router'
 import { sendStatic } from 'utils/static'
-import { createSession
-       , setupSessionHandler
-       } from './socket'
+import { makeSocket } from './socket'
 
 const sendFrontFile =
   (fileName: string, encoding: string | null = 'utf8') => (
@@ -47,8 +45,8 @@ const makeFrontRoutes =
 
 const routes =
   { sub:
-    // { 'api': apiRoutes
-    { 'index': serveIndexHTML
+    { 'api': apiRoutes
+    , 'index': serveIndexHTML
     , 'index.html': serveIndexHTML
     , 'app.js': sendFrontFile('app.js')
     , 'api.js': sendFrontFile('api.js')
@@ -99,25 +97,8 @@ const handleRequest =
        )
   }
 
-const socketSessionHandler = setupSessionHandler(createSession)
-
 const wss = new WebSocket.Server({ noServer: true})
-wss.on('connection', socketSessionHandler.add)
 const server = createServer(handleRequest)
-server
-  .on
-   ( 'upgrade'
-   , (request, socket, head) => {
-       wss
-         .handleUpgrade
-          ( request
-          , socket
-          , head
-          , (ws) => {
-              wss.emit('connection', ws, request)
-            }
-          )
-     }
-   )
+server.on('upgrade', makeSocket(wss))
 
 server.listen(8080)
