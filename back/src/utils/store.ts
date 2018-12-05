@@ -26,9 +26,9 @@ type StoreMethods<T> =
   , ignore: () => void
   }
 
-type Store = <T>(key: string, initData: T) => StoreMethods<T>
-type JsonStore = (directory:string, persist?: boolean) => Store
-const jsonStore: JsonStore =
+type JSONStore = <T>(key: string, initData: T) => StoreMethods<T>
+type SetupJSONStore = (directory:string, persist?: boolean) => JSONStore
+const setupJSONStore: SetupJSONStore =
   (directory, persist = true) =>
     (key, initData) => {
       const JSON_PATH = `${directory}/${key}.json`
@@ -77,5 +77,5 @@ const jsonStore: JsonStore =
     }
 
 export
-  { jsonStore
+  { setupJSONStore
   }

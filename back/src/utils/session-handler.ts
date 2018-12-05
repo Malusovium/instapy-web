@@ -35,10 +35,6 @@ type SessionHandlerMethods =
   , getSessionsLength: GetSessionsLength
   }
 
-type SetupSessionHandler =
-  (createSession: CreateSession) =>
-    SessionHandlerMethods
-
 const createUID = () => uuidv4()
 type IsConnectionID =
   (searchSessionID: SessionID) =>
@@ -92,8 +88,12 @@ const getDeadSessionIDList: GetDeadSessionIDList =
       , filter(isDeadHeartBeat(maxDifference)(compareDate))
       )
 
+type SetupSessionHandler =
+  (createSession: CreateSession, maxTimeout?: number) =>
+    SessionHandlerMethods
+
 const setupSessionHandler: SetupSessionHandler =
-  (createSession) => {
+  (createSession, maxTimeout = 30000) => {
     let sessionList: SessionList = []
 
     const ripSessionBySessionID =
@@ -142,16 +142,15 @@ const setupSessionHandler: SetupSessionHandler =
     const pingAll =
       () => {
         compose<any, any, any>
-        ( map((socket:any) => { socket.ping(() => { console.log('pinged') }) })
-        // , (val) => { console.log(val); return val}
+        ( map((socket:any) => { socket.ping(() => {  }) })
         , map(path('socket'))
         )(sessionList)
 
-        console.log(sessionList)
+        // console.log(sessionList)
 
         setTimeout
         ( pingAll
-        , 1000
+        , maxTimeout * 0.9
         )
       }
 
@@ -159,15 +158,15 @@ const setupSessionHandler: SetupSessionHandler =
       () => {
         const deadSessionIDList =
           getDeadSessionIDList
-          (4000)
+          (maxTimeout)
           (new Date(Date.now()))
           (sessionList)
-        console.log(`DeadSessions:`, deadSessionIDList)
+        // console.log(`DeadSessions:`, deadSessionIDList)
         deadSessionIDList
           .map(removeSession)
         setTimeout
         ( removeDeadSessions
-        , 3000
+        , maxTimeout
         )
       }
 

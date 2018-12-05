@@ -1,4 +1,3 @@
-import { initJWT } from 'utils/jwt'
 import xs from 'xstream'
 
 import { find

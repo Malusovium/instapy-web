@@ -5,9 +5,8 @@ import { reduce } from 'rambda'
 // import { routes as apiRoutes } from './routes'
 import { makeRouter } from 'utils/router'
 import { sendStatic } from 'utils/static'
-import { createSession
-       , setupSessionHandler
-       } from './socket'
+import { createSession } from './socket'
+import { setupSessionHandler } from 'utils/session-handler'
 
 const sendFrontFile =
   (fileName: string, encoding: string | null = 'utf8') => (

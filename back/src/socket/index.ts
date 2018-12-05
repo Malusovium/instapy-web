@@ -1,14 +1,17 @@
 import { run } from '@cycle/run'
 import { makeMessageDriver
-       // , InternalMessage
-       // , MessageSink
-       // , MessageSource
        } from './drivers/message'
-import { makeAuthDriver } from './drivers/auth'
+import
+  { AuthSource
+  , AuthSink
+  , makeAuthDriver
+  } from './drivers/auth'
 import delay from 'xstream/extra/delay'
 import xs, { Stream } from 'xstream'
 
-import { setupSessionHandler } from './session-handler'
+import { setupBcrypt } from 'utils/bcrypt'
+import { setupJWT } from 'utils/jwt'
+import { setupJSONStore } from 'utils/json-store'
 
 import
   { compose
@@ -20,11 +23,11 @@ import { Login } from './components/login'
 
 type Sources =
   { message$: any//MessageSource
-  , auth$: any
+  , auth: AuthSource
   }
 type Sinks =
   { message$?: any//MessageSink
-  , auth$?: any
+  , auth?: AuthSink
   }
 
 type Component =
@@ -57,35 +60,48 @@ const makeJSONMessage =
         .mapTo(`Bad message`)
 
     return (
-      { message$
-      , error$
+      { message$: jsonMessage$
+      , error$: error$
       }
     )
   }
 
 const main: Component =
-  ({ message$, auth$ }) => {
+  ({ message$, auth }) => {
     const JSONMessage = makeJSONMessage(message$)
-    const roundTrip$ = message$
-      .debug('well?')
     const login =
       Login
       ( { message$: JSONMessage.message$
-        , auth$
+        , auth
         }
       )
 
+    const messageOut$ =
+      xs.merge
+         ( JSONMessage.error$
+         , login.message$
+         , login.error$
+         )
+        .map(JSON.stringify)
+
     return (
-      { message$:
-          xs.merge
-             ( roundTrip$
-             , login.message$
-             , JSONMessage.error$
-             )
-      , auth$: xs.merge(login.auth$)
+      { message$: messageOut$
+      , auth: xs.merge(login.auth)
       }
     )
   }
+
+const bcrypt = setupBcrypt(2)
+const jwt = setupJWT('MY_SECRET')
+const JSONStore = setupJSONStore(`${__dirname}/../../../data`)
+
+const userStore =
+  JSONStore
+  ( 'user'
+  , { userName: 'henk'
+    , passWord: bcrypt.createSync('pass')
+    }
+  )
 
 const createSession =
   (ws:any, sessionID: string) => {
@@ -93,7 +109,15 @@ const createSession =
       run
       ( main
       , { message$: makeMessageDriver(ws)
-        , auth$: makeAuthDriver()
+        , auth:
+            makeAuthDriver
+            ( { createHash: bcrypt.create
+              , checkHash: bcrypt.check
+              , createToken: jwt.create
+              , checkToken: jwt.check
+              , getUser: userStore.get
+              }
+            )
         }
       )
 
@@ -102,5 +126,4 @@ const createSession =
 
 export
   { createSession
-  , setupSessionHandler
   }

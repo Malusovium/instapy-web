@@ -1,16 +1,16 @@
 import * as jwt from 'jsonwebtoken'
 
-const initJWT =
+const setupJWT =
   ( secret:string
   , algorithm = 'HS512'
   ) => (
-  { createToken:
+  { create:
       async (payload:any, options:any = {}) =>
         jwt.sign( payload
                 , secret
                 , { ...options, algorithm }
                 )
-  , checkToken:
+  , check:
       async (token:any, options:any = {}) =>
         jwt.verify( token
                   , secret
@@ -20,5 +20,5 @@ const initJWT =
 )
 
 export
-  { initJWT
+  { setupJWT
   }
