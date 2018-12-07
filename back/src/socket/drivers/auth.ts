@@ -1,11 +1,10 @@
+import * as uuidv4 from 'uuid/v4'
 import
   { propEq
   , path
   , F
   } from 'rambda'
 import xs, { Stream } from 'xstream'
-
-type JWT_KEY = string
 
 type LOGIN_ACTION_DATA =
   { userName: string
@@ -16,18 +15,15 @@ type LOGIN_ACTION =
   , DATA: LOGIN_ACTION_DATA
   }
 
-type LOGIN_SUCCES =
-  { TYPE: 'SUCCES'
-  , SUB_TYPE: 'LOGIN'
-  , DATA:
-    { key: JWT_KEY
-    }
-  }
-type LOGIN_ERROR =
-  { TYPE: 'ERROR'
-  , SUB_TYPE: 'LOGIN'
-  , MESSAGE: string
-  }
+// type LOGIN_SUCCES =
+//   { TYPE: 'SUCCES'
+//   , SUB_TYPE: 'LOGIN'
+//   }
+// type LOGIN_ERROR =
+//   { TYPE: 'ERROR'
+//   , SUB_TYPE: 'LOGIN'
+//   , MESSAGE: string
+//   }
 
 type USER_NAME = string
 type PASS_WORD = string
@@ -47,14 +43,14 @@ type CheckCredentials =
 type MakeCheckCredentials =
   (getUser: GetUser, checkHash: CheckHash) => CheckCredentials
 
-type LoginProducer =
+type Producer =
   { start: (listener:any) => void
   , stop: () => void
   }
 type SetupLoginProducer =
   (checkCredentials: CheckCredentials) =>
     (loginAction$: Stream<User>) =>
-      LoginProducer
+      Producer
 
 const makeCheckCredentials: MakeCheckCredentials =
   (getUser, checkHash) =>
@@ -77,7 +73,7 @@ const setupLoginProducer: SetupLoginProducer =
                 .addListener
                  ( { next: (credentials) =>
                        checkCredentials(credentials)
-                         .then((crentialsAreCorrect) => listener.next(crentialsAreCorrect))
+                         .then((crentialsAreCorrect) => {listener.next(crentialsAreCorrect)})
                    }
                  )
             }
@@ -88,15 +84,66 @@ const setupLoginProducer: SetupLoginProducer =
       )
     }
 
+type JWT_ACTION =
+  { TYPE: 'TOKEN'
+  }
+
+type SetupJWTProducer =
+  (createToken: CreateToken, setToken: SetToken) =>
+    (createJWT$: Stream<void>) =>
+      Producer
+const setupJWTProducer: SetupJWTProducer =
+  (createToken, setToken) =>
+    (createJWT$) => {
+      return (
+        { start:
+            (listener) => {
+              createJWT$
+                .addListener
+                 ( { next: () => {
+                       const tokenID = uuidv4()
+                       createToken({id: tokenID}, {})
+                         .then((token: JSON_WEB_TOKEN) => {listener.next(token)})
+                         .then
+                          ( () => {
+                              setToken
+                              ( { tokenID: tokenID
+                                }
+                              )
+                            }
+                          )
+                     }
+                   }
+                 )
+            }
+        , stop: () => {}
+        }
+      )
+    }
+
+type JWTSource =
+  Stream<JSON_WEB_TOKEN>
+type LOGIN_SUCCES = true
+type LOGIN_ERROR = false
 type LoginSource =
   Stream<LOGIN_SUCCES | LOGIN_ERROR>
+
+type Action =
+  LOGIN_ACTION
+  | JWT_ACTION
+
 type AuthSource =
   { login$: LoginSource
+  , jwt$: JWTSource
   }
 type AuthSink =
-  Stream<LOGIN_ACTION>
+  Stream<Action>
 
 type JSON_WEB_TOKEN = string
+type JSON_WEB_TOKEN_ID = string
+type StoredJsonWebToken =
+  { tokenID: JSON_WEB_TOKEN_ID
+  }
 type JSON_PAYLOAD = string | object
 
 type CreateToken =
@@ -111,14 +158,19 @@ type CreateHash =
 type CheckHash =
   (passWord: PASS_WORD, passWordHash: HASHED_PASS_WORD) =>
     Promise<boolean>
+type GetToken =
+  () => Promise<StoredJsonWebToken>
+type SetToken =
+  (StoredToken: StoredJsonWebToken) => Promise<void>
 type GetUser =
   () =>
     Promise<HashedUser>
 type DirtyFns =
   { createToken: CreateToken
   , checkToken: CheckToken
-  , createHash: CreateHash
   , checkHash: CheckHash
+  , getToken: GetToken
+  , setToken: SetToken
   , getUser: GetUser
   }
 
@@ -127,15 +179,16 @@ type MakeAuthDriver =
     (action$: AuthSink) =>
       AuthSource
 const makeAuthDriver: MakeAuthDriver =
-  ( { createHash
-    , checkHash
+  ( { checkHash
     , createToken
     , checkToken
+    , getToken
+    , setToken
     , getUser
     }
+  , tokenDuration = 8
   ) =>
     (action$) => {
-      console.log('went here')
       const loginProducer =
         setupLoginProducer
         (makeCheckCredentials(getUser, checkHash))
@@ -144,8 +197,17 @@ const makeAuthDriver: MakeAuthDriver =
             .map(path('DATA'))
         )
 
+      const jwtProducer =
+        setupJWTProducer
+        (createToken, setToken)
+        ( action$
+            .filter(propEq('TYPE', 'TOKEN'))
+            .map(() => {})
+        )
+
       return (
         { login$: xs.create(loginProducer)
+        , jwt$: xs.create(jwtProducer)
         }
       )
     }

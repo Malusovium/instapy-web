@@ -146,8 +146,6 @@ const setupSessionHandler: SetupSessionHandler =
         , map(path('socket'))
         )(sessionList)
 
-        // console.log(sessionList)
-
         setTimeout
         ( pingAll
         , maxTimeout * 0.9
@@ -161,7 +159,6 @@ const setupSessionHandler: SetupSessionHandler =
           (maxTimeout)
           (new Date(Date.now()))
           (sessionList)
-        // console.log(`DeadSessions:`, deadSessionIDList)
         deadSessionIDList
           .map(removeSession)
         setTimeout

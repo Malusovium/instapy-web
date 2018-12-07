@@ -20,13 +20,14 @@ import
   } from 'rambda'
 
 import { Login } from './components/login'
+import { Token } from './components/token'
 
 type Sources =
-  { message$: any//MessageSource
+  { message: any//MessageSource
   , auth: AuthSource
   }
 type Sinks =
-  { message$?: any//MessageSink
+  { message?: any//MessageSink
   , auth?: AuthSink
   }
 
@@ -47,31 +48,43 @@ const isNotNil = complement(isNil)
 
 type Message = string | number
 const makeJSONMessage =
-  (message$: Stream<Message>) => {
+  (message: Stream<Message>) => {
     const jsonMessage$ =
-      message$
+      message
         .map(JSONParse)
     const filteredJSONMessage$ =
       jsonMessage$
         .filter(isNotNil)
+        .debug('valid')
     const error$ =
       jsonMessage$
         .filter(isNil)
-        .mapTo(`Bad message`)
+        .mapTo
+         ( { TYPE: 'ERROR'
+           , MESSAGE: 'Bad message'
+           }
+         )
 
     return (
-      { message$: jsonMessage$
+      { message: filteredJSONMessage$
       , error$: error$
       }
     )
   }
 
 const main: Component =
-  ({ message$, auth }) => {
-    const JSONMessage = makeJSONMessage(message$)
+  ({ message, auth }) => {
+    const JSONMessage = makeJSONMessage(message)
     const login =
       Login
-      ( { message$: JSONMessage.message$
+      ( { message: JSONMessage.message
+        , auth
+        }
+      )
+
+    const token =
+      Token
+      ( { message: JSONMessage.message
         , auth
         }
       )
@@ -79,14 +92,21 @@ const main: Component =
     const messageOut$ =
       xs.merge
          ( JSONMessage.error$
-         , login.message$
+         , token.message
+         , login.message
          , login.error$
          )
         .map(JSON.stringify)
 
+    const auth$: any =
+      xs.merge
+         ( login.auth
+         , token.auth
+         )
+
     return (
-      { message$: messageOut$
-      , auth: xs.merge(login.auth)
+      { message: messageOut$
+      , auth: auth$
       }
     )
   }
@@ -98,8 +118,15 @@ const JSONStore = setupJSONStore(`${__dirname}/../../../data`)
 const userStore =
   JSONStore
   ( 'user'
-  , { userName: 'henk'
-    , passWord: bcrypt.createSync('pass')
+  , { userName: 'henkie'
+    , passWord: bcrypt.createSync('password')
+    }
+  )
+
+const tokenStore =
+  JSONStore
+  ( 'token'
+  , { tokenID: 'no token'
     }
   )
 
@@ -108,14 +135,15 @@ const createSession =
     const terminateSession =
       run
       ( main
-      , { message$: makeMessageDriver(ws)
+      , { message: makeMessageDriver(ws)
         , auth:
             makeAuthDriver
-            ( { createHash: bcrypt.create
-              , checkHash: bcrypt.check
+            ( { checkHash: bcrypt.check
               , createToken: jwt.create
               , checkToken: jwt.check
               , getUser: userStore.get
+              , getToken: tokenStore.get
+              , setToken: tokenStore.set
               }
             )
         }
