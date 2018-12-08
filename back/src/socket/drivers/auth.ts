@@ -1,10 +1,11 @@
 import * as uuidv4 from 'uuid/v4'
 import
   { propEq
+  , equals
   , path
   , F
   } from 'rambda'
-import xs, { Stream } from 'xstream'
+import xs, { Stream, MemoryStream } from 'xstream'
 
 type LOGIN_ACTION_DATA =
   { userName: string
@@ -14,16 +15,6 @@ type LOGIN_ACTION =
   { TYPE: 'LOGIN'
   , DATA: LOGIN_ACTION_DATA
   }
-
-// type LOGIN_SUCCES =
-//   { TYPE: 'SUCCES'
-//   , SUB_TYPE: 'LOGIN'
-//   }
-// type LOGIN_ERROR =
-//   { TYPE: 'ERROR'
-//   , SUB_TYPE: 'LOGIN'
-//   , MESSAGE: string
-//   }
 
 type USER_NAME = string
 type PASS_WORD = string
@@ -84,6 +75,47 @@ const setupLoginProducer: SetupLoginProducer =
       )
     }
 
+type CONNECT_ACTION_DATA =
+  { token: JSON_WEB_TOKEN
+  }
+type CONNECT_ACTION =
+  { TYPE: 'CONNECT'
+  , DATA: CONNECT_ACTION_DATA
+  }
+type SetupConnectProducer =
+  (checkToken: CheckToken, getToken: GetToken) =>
+    (connect$: Stream<JSON_WEB_TOKEN>) =>
+      Producer
+const setupConnectProducer: SetupConnectProducer =
+  (checkToken, getToken) =>
+    (connect$) => {
+      return (
+        { start:
+            (listener) => {
+              connect$
+                .debug('well??')
+                .addListener
+                 ( { next:
+                       (token) =>
+                         checkToken<JSON_PAYLOAD_DATA>(token, {})
+                           .then
+                            ( (payload) =>
+                              getToken()
+                                .then( (val) => { console.log(val); console.log(payload); return val})
+                                .then
+                                 ( (storedToken) =>
+                                   equals(storedToken.tokenID, payload.id)
+                                 )
+                                .then( (validToken) => {listener.next(validToken)})
+                            )
+                   }
+                 )
+            }
+        , stop: () => {}
+        }
+      )
+    }
+
 type JWT_ACTION =
   { TYPE: 'TOKEN'
   }
@@ -121,20 +153,50 @@ const setupJWTProducer: SetupJWTProducer =
       )
     }
 
-type JWTSource =
-  Stream<JSON_WEB_TOKEN>
+type AUTHENTICATED = boolean
+type AUTHENTICATED_ACTION =
+  { TYPE: 'AUTHENTICATED'
+  , DATA: AUTHENTICATED
+  }
+type SetupAuthenticatedProducer =
+  (authentication$: Stream<boolean>) =>
+    Producer
+const setupAuthenticatedProducer: SetupAuthenticatedProducer =
+  (authentication$) => {
+    return (
+      { start:
+          (listener) => {
+            authentication$
+              .addListener
+               ( { next: (newState: boolean) => {
+                     listener.next(newState)
+                   }
+                 }
+               )
+          }
+      , stop: () => {}
+      }
+    )
+  }
+
 type LOGIN_SUCCES = true
 type LOGIN_ERROR = false
 type LoginSource =
   Stream<LOGIN_SUCCES | LOGIN_ERROR>
+type JWTSource =
+  Stream<JSON_WEB_TOKEN>
+type AuthenticatedSource =
+  MemoryStream<AUTHENTICATED>
 
 type Action =
   LOGIN_ACTION
   | JWT_ACTION
+  | AUTHENTICATED_ACTION
 
 type AuthSource =
   { login$: LoginSource
   , jwt$: JWTSource
+  , authenticated$: AuthenticatedSource
   }
 type AuthSink =
   Stream<Action>
@@ -144,14 +206,18 @@ type JSON_WEB_TOKEN_ID = string
 type StoredJsonWebToken =
   { tokenID: JSON_WEB_TOKEN_ID
   }
-type JSON_PAYLOAD = string | object
+type JSON_PAYLOAD<T> = T
 
+type JSON_PAYLOAD_DATA =
+  { id: JSON_WEB_TOKEN_ID
+  , iat: number
+  }
 type CreateToken =
-  (payload: JSON_PAYLOAD, options: any) =>
+  <T>(payload: JSON_PAYLOAD<T>, options: any) =>
     Promise<JSON_WEB_TOKEN>
 type CheckToken =
-  (token: JSON_WEB_TOKEN, options:any) =>
-    Promise<JSON_PAYLOAD>
+  <T>(token: JSON_WEB_TOKEN, options:any) =>
+    Promise<JSON_PAYLOAD<T>>
 type CreateHash =
   (passWord: PASS_WORD) =>
     Promise<HASHED_PASS_WORD>
@@ -205,9 +271,30 @@ const makeAuthDriver: MakeAuthDriver =
             .map(() => {})
         )
 
+      const authenticatedProducer =
+        setupAuthenticatedProducer
+        ( action$
+            .filter(propEq('TYPE', 'AUTHENTICATED'))
+            .map(path('DATA'))
+        )
+
+      const connectProducer =
+        setupConnectProducer
+        (checkToken, getToken)
+        ( action$
+            .filter(propEq('TYPE', 'CONNECT'))
+            .map(path('DATA.token'))
+        )
+
+      const authenticated$: any = //AuthenticatedSource =
+        xs.create(authenticatedProducer)
+          .startWith(false)
+
       return (
         { login$: xs.create(loginProducer)
         , jwt$: xs.create(jwtProducer)
+        , authenticated$: authenticated$
+        , connect$: xs.create(connectProducer)
         }
       )
     }

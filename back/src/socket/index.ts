@@ -21,6 +21,7 @@ import
 
 import { Login } from './components/login'
 import { Token } from './components/token'
+import { Connect } from './components/connect'
 
 type Sources =
   { message: any//MessageSource
@@ -89,10 +90,20 @@ const main: Component =
         }
       )
 
+    const connect =
+      Connect
+      ( { message: JSONMessage.message
+        , auth
+        }
+      )
+
     const messageOut$ =
       xs.merge
          ( JSONMessage.error$
+         , connect.message
+         , connect.error$
          , token.message
+         , token.error$
          , login.message
          , login.error$
          )
@@ -102,6 +113,7 @@ const main: Component =
       xs.merge
          ( login.auth
          , token.auth
+         , connect.auth
          )
 
     return (

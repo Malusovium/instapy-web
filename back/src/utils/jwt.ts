@@ -1,17 +1,30 @@
 import * as jwt from 'jsonwebtoken'
 
-const setupJWT =
-  ( secret:string
+type Create =
+  <T>(payload: T & Buffer, options:any) => Promise<string>
+
+type Check =
+  <T>(token: string, options:any) => Promise<any>
+
+type SetupJWT =
+  ( secret: string
+  , algorithm?: string
+  ) =>
+    { create: Create
+    , check: Check
+    }
+const setupJWT: SetupJWT =
+  ( secret
   , algorithm = 'HS512'
   ) => (
   { create:
-      async (payload:any, options:any = {}) =>
+      async (payload, options = {}) =>
         jwt.sign( payload
                 , secret
                 , { ...options, algorithm }
                 )
   , check:
-      async (token:any, options:any = {}) =>
+      async (token, options = {}) =>
         jwt.verify( token
                   , secret
                   , { ...options, algorithms: [algorithm] }
