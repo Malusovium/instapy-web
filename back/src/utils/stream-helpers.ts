@@ -1,9 +1,11 @@
 import xs, { Stream } from 'xstream'
 import sampleCombine from 'xstream/extra/sampleCombine'
+import concat from 'xstream/extra/concat'
 import
   { isNil
   , equals
   , allPass
+  , path
   , map
   , has
   , complement
@@ -131,7 +133,113 @@ const protectedStream: ProtectedStream =
       )
     }
 
+type NestStream =
+  (in$: Stream<any>) => Stream<Stream<any>>
+const nestStream: NestStream =
+  (in$) =>
+    in$
+      .map
+       ( data =>
+         xs.of(data)
+       )
+
+type NestOp =
+  (in$$: Stream<Stream<any>>) => Stream<Stream<any>>
+const nestOp =
+  (opFn: (arg:any) => any) =>
+    (in$$: Stream<Stream<any>>) =>
+      in$$
+        .map
+         (in$ =>
+            in$.map(opFn)
+         )
+
+type Out$ = Stream<any>
+type Error$ = Stream<any>
+type ForkedSteams =
+  { out$: Out$
+  , error$: Error$
+  }
+
+type FailableFn = (args: any) => any
+type ForkError =
+  (in$$: Stream<Stream<any>>) =>
+    ForkedSteams
+const splitError: ForkError =
+  (in$$) => {
+    const out$ =
+      in$$
+        .map
+         ( fn$ =>
+             fn$
+               .replaceError(() => xs.never())
+         )
+        .flatten()
+    const error$ =
+      in$$
+        .map
+         ( fn$ =>
+             fn$
+               .filter(() => false)
+               .replaceError(() => xs.of('Err'))
+         )
+        .flatten()
+
+    return (
+      { out$: out$
+      , error$: error$
+      }
+    )
+  }
+
+const forkError2 =
+  (in$: Stream<any>) => {
+    const pingOnError$ =
+      in$
+        .filter(() => false)
+        .replaceError(() => xs.of())
+        .flatten()
+    // const pinger$ = xs.merge(in$, pingOnError$)
+    // const new$ =
+    //   pinger$
+    //     .mapTo(in$)
+    const new$ =
+      in$
+        .mapTo(xs.merge(in$, pingOnError$))
+
+    const out$ =
+      new$
+        .map
+         ( cIn$ =>
+             cIn$
+               .replaceError(() => xs.never())
+         )
+        .flatten()
+
+    const error$ =
+      new$
+        .map
+         ( cIn$ =>
+             cIn$
+               .filter(() => false)
+               .replaceError(() => xs.of('Err'))
+         )
+        .flatten()
+
+      // .sampleCombine(xs.of(in$))
+      // .mapTo()
+
+    return (
+      { out$: out$
+      , error$: error$
+      }
+    )
+  }
+
 export
   { activateWhen
   , protectedStream
+  , nestOp
+  , nestStream
+  , splitError
   }

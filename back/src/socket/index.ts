@@ -14,7 +14,13 @@ import { setupJWT } from 'utils/jwt'
 import { setupJSONStore } from 'utils/json-store'
 
 import
+  { nestStream
+  , nestOp
+  , splitError
+  } from 'utils/stream-helpers'
+import
   { compose
+  , path
   , isNil
   , complement
   } from 'rambda'
@@ -75,31 +81,46 @@ const makeJSONMessage =
 
 const main: Component =
   ({ message, auth }) => {
-    const JSONMessage = makeJSONMessage(message)
+    const tryJSONParse =
+      message
+        .compose(nestStream)
+        .compose(nestOp(JSON.parse))
+        .compose(splitError)
+
+    const JSONMessage$ =
+      tryJSONParse
+        .out$
+        .debug('Correctly parsed JSON')
+
+    const errorJSONParse$ =
+      tryJSONParse
+        .error$
+        .debug('error happend during parsing')
+
     const login =
       Login
-      ( { message: JSONMessage.message
+      ( { message: JSONMessage$
         , auth
         }
       )
 
     const token =
       Token
-      ( { message: JSONMessage.message
+      ( { message: JSONMessage$
         , auth
         }
       )
 
     const connect =
       Connect
-      ( { message: JSONMessage.message
+      ( { message: JSONMessage$
         , auth
         }
       )
 
     const messageOut$ =
       xs.merge
-         ( JSONMessage.error$
+         ( errorJSONParse$
          , connect.message
          , connect.error$
          , token.message
