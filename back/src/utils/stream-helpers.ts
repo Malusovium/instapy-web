@@ -181,7 +181,7 @@ const splitError: ForkError =
          ( fn$ =>
              fn$
                .filter(() => false)
-               .replaceError(() => xs.of('Err'))
+               .replaceError(xs.of)
          )
         .flatten()
 

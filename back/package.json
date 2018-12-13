@@ -16,9 +16,8 @@
   "dependencies": {
     "@cycle/run": "^5.1.0",
     "bcrypt": "^3.0.2",
+    "instapy-tools": "^0.7.1",
     "jsonwebtoken": "^8.3.0",
-    "level": "^4.0.0",
-    "lowdb": "^1.0.0",
     "rambda": "^1.2.6",
     "ts-node": "^6.0.0",
     "typescript": "^2.9.2",

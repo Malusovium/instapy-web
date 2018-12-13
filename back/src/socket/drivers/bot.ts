@@ -1,35 +1,25 @@
 import xs, { Stream } from 'xstream'
 import { EventEmitter } from 'events'
-import { controls } from 'instapy-tools'
+import { controls
+       , api
+       } from 'instapy-tools'
 import
   { equals
+  , compose
+  , map
+  , path
   , propEq
   , tail
   } from 'rambda'
 
 const DATA_LOCATION = `${__dirname}/../../../../data`
-const botControl = controls(`${DATA_LOCATION}/InstaPy`)
+const INSTAPY_LOCATION = `${DATA_LOCATION}/InstaPy`
+const botControl = controls(INSTAPY_LOCATION)
 
-// oh man this function is extremely faulty, #anything wrong with log output
-// its probally this
-// const uniquelyAppendable =
-//   (source: any[], appendy: any[]): any[] => {
-//     const travel =
-//       (appendix: any[], i = 0): any[] =>
-//         ( source[i] === undefined) ? appendix
-//         : (appendix.length === 0) ? []
-//         : travel
-//           ( (source[i] === appendix[0])
-//               ? appendix.shift()
-//               : appendix
-//           , i + 1
-//           )
-//
-//     const out = travel(appendy)
-//     console.log(`out:`, out)
-//
-//     return out
-//   }
+const { raw, setupMethod, setupCreate } = api
+
+const toPythonMethod = setupMethod(raw)
+const toPythonCreate = setupCreate(INSTAPY_LOCATION)
 
 const uniquelyAppendable =
   ( source: any[]
@@ -214,7 +204,7 @@ const setupLogsProducer =
   )
 
 const handleControlActions =
-  (controlManager:any) =>
+  (controlManager:any, setConfig: SetConfig) =>
     (action$: Stream<any>) => {
       action$
         .filter(propEq('TYPE', 'START'))
@@ -232,6 +222,19 @@ const handleControlActions =
          ( { next:
                () => {
                  controlManager.stop()
+               }
+           }
+         )
+
+      action$
+        .filter(propEq('TYPE', 'BUILD'))
+        .map(path('DATA'))
+        .map(map(toPythonMethod))
+        // .map(toPythonCreate)
+        .addListener
+         ( { next:
+               (pythonLines: any) => {
+                 toPythonCreate(pythonLines, true)
                }
            }
          )
@@ -284,17 +287,49 @@ const handleControlActions =
               }
            }
          )
+
+      action$
+        .filter(propEq('TYPE', 'SET_CONFIG'))
+        .addListener
+         ( { next:
+               (nextConfig:any) => {
+                 setConfig(nextConfig)
+                   // .catch(() => {})
+               }
+           }
+         )
+    }
+
+const setupConfigProducer =
+  (getConfig: GetConfig) =>
+    (action$: Stream<any>) => {
+      return (
+        { start:
+            (listener:any) => {
+              action$
+                .addListener
+                 ( { next:
+                       () => {
+                         listener.next(xs.fromPromise(getConfig()))
+                       }
+                   }
+                 )
+            }
+        , stop:
+            () => {}
+        }
+      )
     }
 
 type GET_CONFIG =
   { TYPE: "GET_CONFIG"
   }
 type UPDATE_CONFIG =
-  { TYPE: "UPDATE_CONFIG"
+  { TYPE: "SET_CONFIG"
   , DATA?: any
   }
 type BUILD_CONFIG =
-  { TYPE: "BUILD_CONFIG"
+  { TYPE: "BUILD"
   }
 type START =
   { TYPE: "START"
@@ -332,17 +367,21 @@ const makeBotDriver: MakeBotDriver =
     (action$) => {
       const controlManager = setupControlManager()
       handleControlActions
-      ( controlManager )
+      ( controlManager, neededFns.setConfig )
       ( action$.debug('bot in') )
 
       const statusProducer =
         setupStatusProducer(controlManager.statusWatcher)
       const logsProducer =
         setupLogsProducer(controlManager.logsWatcher)
+      const configProducer =
+        setupConfigProducer
+        (neededFns.getConfig)
+        (action$.filter(propEq('TYPE', 'GET_CONFIG')))
 
       return (
         { status$: xs.create(statusProducer)
-        , config$: xs.of()
+        , config$: xs.create(configProducer)
         , logs$: xs.create(logsProducer)
         }
       )

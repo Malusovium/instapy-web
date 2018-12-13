@@ -8,43 +8,6 @@ import { setupJWT } from 'utils/jwt'
 import { setupJSONStore } from 'utils/json-store'
 
 import { Main } from './main'
-// const JSONParse =
-//   (jsonString: string) => {
-//     try {
-//       const parsedJSON = JSON.parse(jsonString)
-//       return parsedJSON
-//     } catch {
-//       return null
-//     }
-//   }
-//
-// const isNotNil = complement(isNil)
-
-// type Message = string | number
-// const makeJSONMessage =
-//   (message: Stream<Message>) => {
-//     const jsonMessage$ =
-//       message
-//         .map(JSONParse)
-//     const filteredJSONMessage$ =
-//       jsonMessage$
-//         .filter(isNotNil)
-//         .debug('valid')
-//     const error$ =
-//       jsonMessage$
-//         .filter(isNil)
-//         .mapTo
-//          ( { TYPE: 'ERROR'
-//            , MESSAGE: 'Bad message'
-//            }
-//          )
-//
-//     return (
-//       { message: filteredJSONMessage$
-//       , error$: error$
-//       }
-//     )
-//   }
 
 const bcrypt = setupBcrypt(2)
 const jwt = setupJWT('MY_SECRET')
