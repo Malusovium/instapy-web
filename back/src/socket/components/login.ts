@@ -3,6 +3,10 @@ import { has
        , equals
        } from 'rambda'
 
+import
+  { splitError
+  } from 'utils/stream-helpers'
+
 type Action =
   { TYPE: string
   , DATA?: any
@@ -22,9 +26,14 @@ const Login =
         .filter(propEq('TYPE', 'LOGIN'))
         .filter(has('DATA'))
 
+    const forkLogin =
+      auth
+        .login$
+        .compose(splitError)
+
     const loginSucces$ =
-      auth.login$
-        .filter(equals(true))
+      forkLogin
+        .out$
         .mapTo
          ( { TYPE: 'SUCCES'
            , SUB_TYPE: 'LOGIN'
@@ -32,8 +41,9 @@ const Login =
          )
 
     const loginError$ =
-      auth.login$
-        .filter(equals(false))
+      forkLogin
+        .error$
+        .debug('Error reason')
         .mapTo
          ( { TYPE: 'ERROR'
            , SUB_TYPE: 'LOGIN'

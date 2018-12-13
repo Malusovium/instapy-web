@@ -3,7 +3,9 @@ import
   , propEq
   } from 'rambda'
 import xs from 'xstream'
-import { protectedStream } from 'utils/stream-helpers'
+import { protectedStream
+       , splitError
+       } from 'utils/stream-helpers'
 
 
 const Token =
@@ -12,30 +14,25 @@ const Token =
       protectedStream
       ( 'TOKEN' )
       (message, auth.authenticated$)
-      // message
-      //   .filter(propEq('TYPE', 'TOKEN'))
-    // const securedTokenRequest =
-    //   activateWhen
-    //   ( equals(true) )
-    //   (tokenRequest$, auth.authenticated$)
 
     const loginSucces$ =
       auth
         .login$
-        .filter(equals(true))
+        .compose(splitError)
+        .out$
 
     const connectSucces$ =
       auth
         .connect$
-        .filter(equals(true))
+        .compose(splitError)
+        .out$
 
     const createToken$ =
       xs.merge
-         ( loginSucces$ //.debug('triggerd login')
-         , connectSucces$ //.debug('triggerd connect')
+         ( loginSucces$
+         , connectSucces$
          , tokenRequest.validated$
          )
-        // .debug('create token:')
         .mapTo<{ TYPE: 'TOKEN'}>
          ( { TYPE: 'TOKEN'
            }
@@ -52,6 +49,8 @@ const Token =
     const createdToken$ =
       auth
         .jwt$
+        .compose(splitError)
+        .out$
         .map
          ( (jwt:string) => (
              { TYPE: 'TOKEN'
@@ -61,16 +60,6 @@ const Token =
              }
            )
          )
-
-    // const securedTokenRequestInvalid$ =
-    //   securedTokenRequest
-    //     .error$
-    //     .mapTo
-    //      ( { TYPE: 'ERROR'
-    //        , SUB_TYPE: 'TOKEN'
-    //        , MESSAGE: 'Not logged in!'
-    //        }
-    //      )
 
     return (
       { message: createdToken$

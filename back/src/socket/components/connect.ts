@@ -5,6 +5,9 @@ import
   } from 'rambda'
 import xs from 'xstream'
 
+import
+  { splitError } from 'utils/stream-helpers'
+
 const Connect =
   ({ message, auth}: any) => {
     const connectRequest$ =
@@ -12,10 +15,14 @@ const Connect =
         .filter(propEq('TYPE', 'CONNECT'))
         .filter(has('DATA'))
 
-    const connectSucces$ =
+    const forkedConnect =
       auth
         .connect$
-        .filter(equals(true))
+        .compose(splitError)
+
+    const connectSucces$ =
+      forkedConnect
+        .out$
         .debug('succes')
         .mapTo
          ( { TYPE: "SUCCES"
@@ -24,9 +31,8 @@ const Connect =
          )
 
     const connectError$ =
-      auth
-        .connect$
-        .filter(equals(false))
+      forkedConnect
+        .error$
         .mapTo
          ( { TYPE: "ERROR"
            , SUB_TYPE: "CONNECT"

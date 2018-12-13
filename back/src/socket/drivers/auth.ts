@@ -48,11 +48,23 @@ const makeCheckCredentials: MakeCheckCredentials =
     (credentials) =>
       getUser()
         .then
-         ( (storedCredentials) =>
-              storedCredentials.userName !== credentials.userName ? false
-              : checkHash(credentials.passWord, storedCredentials.passWord)
+         ( (storedCredentials) => {
+             if (storedCredentials.userName !== credentials.userName) {
+               throw 'Username is incorrect'
+             } else {
+              return checkHash(credentials.passWord, storedCredentials.passWord)
+             }
+           }
          )
-        .catch(F)
+        .then
+         ( hashesMatch => {
+             if (!hashesMatch) {
+               throw 'Password is incorrect'
+             } else {
+               return true
+             }
+           }
+         )
 
 const setupLoginProducer: SetupLoginProducer =
   (checkCredentials) =>
@@ -62,9 +74,10 @@ const setupLoginProducer: SetupLoginProducer =
             (listener) => {
               loginAction$
                 .addListener
-                 ( { next: (credentials) =>
-                       checkCredentials(credentials)
-                         .then((crentialsAreCorrect) => {listener.next(crentialsAreCorrect)})
+                 ( { next: (credentials) => {
+                       const checkedCredentials = checkCredentials(credentials)
+                       listener.next(xs.fromPromise(checkedCredentials))
+                     }
                    }
                  )
             }
@@ -75,6 +88,30 @@ const setupLoginProducer: SetupLoginProducer =
       )
     }
 
+type ValidateToken =
+  (token: JSON_WEB_TOKEN) => Promise<boolean>
+type MakeValidateToken =
+  (checkToken: CheckToken, getToken: GetToken) =>
+    ValidateToken
+const makeValidateToken: MakeValidateToken =
+  (checkToken, getToken) =>
+    (token) =>
+      checkToken<JSON_PAYLOAD_DATA>(token, {})
+        .catch(() => {throw 'Not a valid token'})
+        .then
+         ( (payload) =>
+             getToken()
+               .then
+                ( (storedToken) => {
+                    if (storedToken.tokenID !== payload.id) {
+                      throw 'Invalid tokenID'
+                    } else {
+                      return true
+                    }
+                  }
+                )
+         )
+
 type CONNECT_ACTION_DATA =
   { token: JSON_WEB_TOKEN
   }
@@ -83,31 +120,23 @@ type CONNECT_ACTION =
   , DATA: CONNECT_ACTION_DATA
   }
 type SetupConnectProducer =
-  (checkToken: CheckToken, getToken: GetToken) =>
+  (validateToken: ValidateToken) =>
     (connect$: Stream<JSON_WEB_TOKEN>) =>
       Producer
+
 const setupConnectProducer: SetupConnectProducer =
-  (checkToken, getToken) =>
+  (validateToken) =>
     (connect$) => {
       return (
         { start:
             (listener) => {
               connect$
-                .debug('well??')
                 .addListener
                  ( { next:
-                       (token) =>
-                         checkToken<JSON_PAYLOAD_DATA>(token, {})
-                           .then
-                            ( (payload) =>
-                              getToken()
-                                .then( (val) => { console.log(val); console.log(payload); return val})
-                                .then
-                                 ( (storedToken) =>
-                                   equals(storedToken.tokenID, payload.id)
-                                 )
-                                .then( (validToken) => {listener.next(validToken)})
-                            )
+                       (token) => {
+                         const validatedToken = validateToken(token)
+                         listener.next(xs.fromPromise(validatedToken))
+                       }
                    }
                  )
             }
@@ -134,8 +163,9 @@ const setupJWTProducer: SetupJWTProducer =
                 .addListener
                  ( { next: () => {
                        const tokenID = uuidv4()
-                       createToken({id: tokenID}, {})
-                         .then((token: JSON_WEB_TOKEN) => {listener.next(token)})
+                       const createdToken = createToken({id: tokenID}, {})
+                       listener.next(xs.fromPromise(createdToken))
+                       createdToken
                          .then
                           ( () => {
                               setToken
@@ -144,6 +174,7 @@ const setupJWTProducer: SetupJWTProducer =
                               )
                             }
                           )
+                         .catch(console.error)
                      }
                    }
                  )
@@ -280,7 +311,7 @@ const makeAuthDriver: MakeAuthDriver =
 
       const connectProducer =
         setupConnectProducer
-        (checkToken, getToken)
+        (makeValidateToken(checkToken, getToken))
         ( action$
             .filter(propEq('TYPE', 'CONNECT'))
             .map(path('DATA.token'))

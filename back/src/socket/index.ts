@@ -1,148 +1,50 @@
 import { run } from '@cycle/run'
-import { makeMessageDriver
-       } from './drivers/message'
-import
-  { AuthSource
-  , AuthSink
-  , makeAuthDriver
-  } from './drivers/auth'
-import delay from 'xstream/extra/delay'
-import xs, { Stream } from 'xstream'
+import { makeMessageDriver } from './drivers/message'
+import { makeAuthDriver } from './drivers/auth'
+import { makeBotDriver } from './drivers/bot'
 
 import { setupBcrypt } from 'utils/bcrypt'
 import { setupJWT } from 'utils/jwt'
 import { setupJSONStore } from 'utils/json-store'
 
-import
-  { nestStream
-  , nestOp
-  , splitError
-  } from 'utils/stream-helpers'
-import
-  { compose
-  , path
-  , isNil
-  , complement
-  } from 'rambda'
+import { Main } from './main'
+// const JSONParse =
+//   (jsonString: string) => {
+//     try {
+//       const parsedJSON = JSON.parse(jsonString)
+//       return parsedJSON
+//     } catch {
+//       return null
+//     }
+//   }
+//
+// const isNotNil = complement(isNil)
 
-import { Login } from './components/login'
-import { Token } from './components/token'
-import { Connect } from './components/connect'
-
-type Sources =
-  { message: any//MessageSource
-  , auth: AuthSource
-  }
-type Sinks =
-  { message?: any//MessageSink
-  , auth?: AuthSink
-  }
-
-type Component =
-  (sources: Sources) => Sinks
-
-const JSONParse =
-  (jsonString: string) => {
-    try {
-      const parsedJSON = JSON.parse(jsonString)
-      return parsedJSON
-    } catch {
-      return null
-    }
-  }
-
-const isNotNil = complement(isNil)
-
-type Message = string | number
-const makeJSONMessage =
-  (message: Stream<Message>) => {
-    const jsonMessage$ =
-      message
-        .map(JSONParse)
-    const filteredJSONMessage$ =
-      jsonMessage$
-        .filter(isNotNil)
-        .debug('valid')
-    const error$ =
-      jsonMessage$
-        .filter(isNil)
-        .mapTo
-         ( { TYPE: 'ERROR'
-           , MESSAGE: 'Bad message'
-           }
-         )
-
-    return (
-      { message: filteredJSONMessage$
-      , error$: error$
-      }
-    )
-  }
-
-const main: Component =
-  ({ message, auth }) => {
-    const tryJSONParse =
-      message
-        .compose(nestStream)
-        .compose(nestOp(JSON.parse))
-        .compose(splitError)
-
-    const JSONMessage$ =
-      tryJSONParse
-        .out$
-        .debug('Correctly parsed JSON')
-
-    const errorJSONParse$ =
-      tryJSONParse
-        .error$
-        .debug('error happend during parsing')
-
-    const login =
-      Login
-      ( { message: JSONMessage$
-        , auth
-        }
-      )
-
-    const token =
-      Token
-      ( { message: JSONMessage$
-        , auth
-        }
-      )
-
-    const connect =
-      Connect
-      ( { message: JSONMessage$
-        , auth
-        }
-      )
-
-    const messageOut$ =
-      xs.merge
-         ( errorJSONParse$
-         , connect.message
-         , connect.error$
-         , token.message
-         , token.error$
-         , login.message
-         , login.error$
-         )
-        .map(JSON.stringify)
-
-    const auth$: any =
-      xs.merge
-         ( login.auth
-         , token.auth
-         , connect.auth
-         )
-
-    return (
-      { message: messageOut$
-      , auth: auth$
-      }
-    )
-  }
+// type Message = string | number
+// const makeJSONMessage =
+//   (message: Stream<Message>) => {
+//     const jsonMessage$ =
+//       message
+//         .map(JSONParse)
+//     const filteredJSONMessage$ =
+//       jsonMessage$
+//         .filter(isNotNil)
+//         .debug('valid')
+//     const error$ =
+//       jsonMessage$
+//         .filter(isNil)
+//         .mapTo
+//          ( { TYPE: 'ERROR'
+//            , MESSAGE: 'Bad message'
+//            }
+//          )
+//
+//     return (
+//       { message: filteredJSONMessage$
+//       , error$: error$
+//       }
+//     )
+//   }
 
 const bcrypt = setupBcrypt(2)
 const jwt = setupJWT('MY_SECRET')
@@ -163,11 +65,17 @@ const tokenStore =
     }
   )
 
+const configStore =
+  JSONStore
+  ( 'config'
+  , []
+  )
+
 const createSession =
   (ws:any, sessionID: string) => {
     const terminateSession =
       run
-      ( main
+      ( Main
       , { message: makeMessageDriver(ws)
         , auth:
             makeAuthDriver
@@ -177,6 +85,12 @@ const createSession =
               , getUser: userStore.get
               , getToken: tokenStore.get
               , setToken: tokenStore.set
+              }
+            )
+        , bot:
+            makeBotDriver
+            ( { getConfig: configStore.get
+              , setConfig: configStore.set
               }
             )
         }
