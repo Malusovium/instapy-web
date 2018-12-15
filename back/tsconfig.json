@@ -1,7 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "types",
+    "baseUrl": ".",
     "typeRoots": ["types"],
     "noEmitOnError": false,
     "module": "commonjs",
@@ -19,7 +19,10 @@
       "ES6",
       "ES5",
       "DOM"
-    ]
+    ],
+    "paths": {
+      "utils/*": [ "src/utils/*" ]
+    }
   },
   // "include": ["src#<{(||)}>#*.ts"],
   "exclude": ["node_modules", "build"]

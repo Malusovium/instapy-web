@@ -1,6 +1,6 @@
 import { Component } from './interfaces'
 
-import mainBackground from './assets/main-background.png'
+import backgroundImage from './assets/background.png'
 import iconLogo from './assets/instapy-web-icon-filled-white.svg'
 
 import { MainMenu } from './components/main-menu'
@@ -18,7 +18,7 @@ export type Routes =
 
 const style =
   { background: '#efd9ce'
-  , backgroundImage: `url(${mainBackground})`
+  , backgroundImage: `url(${backgroundImage})`
   , icon: `url(${iconLogo})`
   , mainButton: '#7161ef'
   , subButton: '#f991cc'
