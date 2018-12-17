@@ -18,6 +18,7 @@ import { style, stylesheet } from 'typestyle'
 import * as csstips from 'csstips'
 
 import { BaseSources, BaseSinks } from '../interfaces'
+import { BackSource } from './../drivers/back'
 
 import { ColorPallete } from '../utils/color-pallete'
 import { transition
@@ -134,9 +135,9 @@ export const Transitions: Transitions =
 
 export const Bot =
   (colors: ColorPallete) =>
-    ({ DOM, onion, storage, HTTP}: Sources): Sinks => {
-      const action$ =
-        intent(DOM, storage, HTTP)
+    ({ DOM, onion, back}: Sources): Sinks => {
+      const action =
+        intent(DOM, back)
       const vdom$: Stream<VNode> =
         view
         ( Style(colors)
@@ -144,8 +145,8 @@ export const Bot =
         )(onion.state$)
 
       return { DOM: vdom$
-             , onion: action$.onion
-             , HTTP: action$.HTTP
+             , onion: action.onion
+             , back: action.back
              }
     }
 
@@ -154,42 +155,20 @@ const takeSecond =
 
 const intent =
   ( DOM: DOMSource
-  , storage: ResponseCollection
-  , HTTP: HTTPSource
+  , back: BackSource
   ) => {
     const init$ = xs.of<Reducer>(
       initReducer(defaultState)
     )
 
-    const token$ =
-      storage
-        .session
-        .getItem('jwt-token')
+    const subScribeStatus$ =
+      xs.of({ TYPE: 'SUBSCRIBE_STATUS' })
 
-    const botStatusRequest$ =
-      xs.periodic(1000)
-        .compose(sampleCombine(token$))
-        .map(takeSecond)
-        .debug('token')
-        .map
-         ( (token: string) => (
-             { url: `${process.env.BACK_URL}/api/bot-status`
-             , category: 'status'
-             , headers:
-               { Authorization: `Bearer ${token}`
-               }
-             , method: 'GET'
-             }
-           )
-         )
-
-    const botStatusResponse$ =
-      HTTP
-        .select('status')
-        .flatten()
-        .map(path('body.status'))
+    const botStatus$ =
+      back
+        .message('STATUS')
         .map<Reducer>
-         ( (status: string) =>
+         ( ({ status }:any) =>
              (prev) => (
              { ...prev
              , botStatus: status
@@ -197,53 +176,29 @@ const intent =
            )
          )
 
-    const botStartRequest$ =
+    const startRequest$ =
       DOM
         .select('.start')
         .events('click')
-        .compose(sampleCombine(token$))
-        .map(takeSecond)
-        .map
-         ( (token: string) => (
-             { url: `${process.env.BACK_URL}/api/bot-start`
-             , category: 'start'
-             , headers:
-               { Authorization: `Bearer ${token}`
-               }
-             , method: 'GET'
-             }
-           )
-         )
+        .mapTo({ TYPE: 'START'})
 
-    const botStopRequest$ =
+    const stopRequest$ =
       DOM
         .select('.stop')
         .events('click')
-        .compose(sampleCombine(token$))
-        .map(takeSecond)
-        .map
-         ( (token: string) => (
-             { url: `${process.env.BACK_URL}/api/bot-stop`
-             , category: 'stop'
-             , headers:
-               { Authorization: `Bearer ${token}`
-               }
-             , method: 'GET'
-             }
-           )
-         )
+        .mapTo({TYPE: 'STOP'})
 
-    const botErrorResponse$ =
+    const botError$ =
       xs.merge
-      ( HTTP.select('stop')
-      , HTTP.select('start')
-      ).flatten()
-        .map(pathOr(' ', ['body', 'error']))
+         ( back.error('START')
+         , back.error('STOP')
+         , back.error('SUBSCRIBE_STATUS')
+         )
         .map<Reducer>
-         ( (status: string) =>
+         ( (errorMessage) =>
              (prev) => (
                { ...prev
-               , errorMessage: status
+               , errorMessage: errorMessage
                }
              )
          )
@@ -251,15 +206,15 @@ const intent =
     return { onion:
                xs.merge
                ( init$
-               , botStatusResponse$
-               , botErrorResponse$
+               , botStatus$
+               , botError$
                )
-           , HTTP:
+           , back:
                xs.merge
-               ( botStatusRequest$
-               , botStartRequest$
-               , botStopRequest$
-               )
+                  ( subScribeStatus$
+                  , startRequest$
+                  , stopRequest$
+                  )
            }
   }
 

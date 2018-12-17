@@ -9,6 +9,7 @@ import { StateSource } from 'cycle-onionify'
 import { HTTPSource } from '@cycle/http'
 import isolate from '@cycle/isolate'
 import { StorageRequest } from '@cycle/storage'
+import { BackSource } from './../drivers/back'
 
 import { propEq
        , pick
@@ -151,7 +152,7 @@ export const LoginTransitions: Transitions =
  }
 
 export const Login = (colors: ColorPallete) =>
-  ({ DOM, onion, HTTP}: Sources): Sinks => {
+  ({ DOM, onion, HTTP, back}: Sources): Sinks => {
     const userName$ =
       isolate
       ( InputText(colors)
@@ -168,28 +169,31 @@ export const Login = (colors: ColorPallete) =>
       intent
       ( DOM
       , onion.state$
-      , HTTP
+      , back
       )
     const vdom$: Stream<VNode> =
       view
       ( LoginStyle(colors)
       , LoginTransitions
-      )( onion.state$
-       , userName$.DOM
-       , passWord$.DOM
-       )
+      )
+      ( onion.state$
+      , userName$.DOM
+      , passWord$.DOM
+      )
 
-    return { DOM: vdom$
-           , onion:
-              xs.merge
-              ( action$.onion
-              , userName$.onion
-              , passWord$.onion
-              )
-           , HTTP: action$.HTTP
-           , storage: action$.storage
-           , router: action$.router
-           }
+    return (
+      { DOM: vdom$
+      , onion:
+         xs.merge
+         ( action$.onion
+         , userName$.onion
+         , passWord$.onion
+         )
+      , storage: action$.storage
+      , router: action$.router
+      , back: action$.back
+      }
+    )
   }
 
 const takeSecond =
@@ -198,7 +202,7 @@ const takeSecond =
 const intent =
   ( DOM: DOMSource
   , state$: Stream<State>
-  , HTTP: HTTPSource
+  , back: BackSource
   ) => {
     const init$ =
       xs.of<Reducer>
@@ -231,58 +235,57 @@ const intent =
         .map(pluck('value'))
         .map
          ( ([ userName, passWord ]) => (
-             { url: `${process.env.BACK_URL}/api/login`
-             , category: 'login'
-             , method: 'POST'
-             , send:
-               { data:
-                 { userName
-                 , passWord
-                 }
+             { TYPE: 'LOGIN'
+             , DATA:
+               { userName: userName
+               , passWord: passWord
                }
-
              }
            )
          )
 
-    const loginResponse$ =
-      HTTP
-        .select('login')
-        .flatten()
-        .map(path('body'))
+    const loginError$ =
+      back.error('LOGIN').debug('login err')
 
-    const loginNormal$ =
-      loginResponse$
+    const loginSucces$ =
+      back.succes('LOGIN')
+
+    const normalButton$ =
+      xs.merge
+         ( loginError$
+         , loginSucces$
+         )
         .mapTo<Reducer>
          ( (prev) => ({...prev, buttonState: 'normal'}))
 
-    const loginError$ =
-      loginResponse$
-        .filter(path('error'))
+    const errorMessage$ =
+      loginError$
+        .debug('Err')
         .map<Reducer>
-         ( ({error}) =>
+         ( (message: string) =>
              (prev) => (
                { ...prev
-               , errorMessage: error
+               , errorMessage: message
                }
              )
          )
 
     const loginToken$ =
-      loginResponse$
-        .filter(path('token'))
+      back
+        .message('TOKEN')
+        .debug('token')
         .map<StorageRequest>
-         ( ({token}) => (
+         ( ({token}: any) => (
              { target: 'session'
              , key: 'jwt-token'
-             , value: token 
+             , value: token
              }
            )
          )
 
     const clearUserCredentials$ =
-      loginToken$
-        .mapTo
+      loginSucces$
+        .mapTo<Reducer>
          ( (prev) => (
              { ...prev
              , userName:
@@ -301,18 +304,20 @@ const intent =
       loginToken$
         .mapTo('/bot')
 
-    return { onion:
-              xs.merge
-              ( init$
-              , loginLoading$
-              , loginNormal$
-              , loginError$
-              , clearUserCredentials$
-              )
-           , HTTP: xs.merge(loginRequest$)
-           , router: xs.merge(changeRoute$)
-           , storage: xs.merge(loginToken$)
-           }
+    return (
+      { onion:
+          xs.merge
+          ( init$
+          , loginLoading$
+          , normalButton$
+          , errorMessage$
+          , clearUserCredentials$
+          )
+      , router: xs.merge(changeRoute$)
+      , storage: xs.merge(loginToken$)
+      , back: xs.merge(loginRequest$)
+      }
+    )
   }
 
 const view = (css:Classes, trans:Transitions) =>

@@ -4,6 +4,7 @@ import { StorageSource, StorageRequest, ResponseCollection } from '@cycle/storag
 import { HTTPSource, RequestOptions } from '@cycle/http';
 import { TimeSource } from '@cycle/time';
 import { RouterSource, HistoryAction } from 'cyclic-router';
+import { BackSource, BackSink } from './drivers/back'
 
 export type Component = (s: BaseSources) => BaseSinks;
 
@@ -13,6 +14,7 @@ export interface BaseSources {
   time: TimeSource
   router: RouterSource
   storage: ResponseCollection //StorageSource
+  back: BackSource
 }
 
 export interface BaseSinks {
@@ -22,4 +24,5 @@ export interface BaseSinks {
   router?: Stream<HistoryAction>
   storage?: Stream<StorageRequest>
   speech?: Stream<string>
+  back?: BackSink
 }

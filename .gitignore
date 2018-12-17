@@ -1,8 +1,9 @@
 node_modules
 data
-.fusebox
 InstaPy
+dist
 build
+.cache
 *bcrypt-hashes.json
 *instapy-api.json
 

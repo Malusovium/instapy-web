@@ -6,7 +6,7 @@ import { div
        , DOMSource 
        } from '@cycle/dom'
 import { StateSource } from 'cycle-onionify'
-import { ResponseCollection } from '@cycle/storage'
+import { StorageRequest } from '@cycle/storage'
 import isolate from '@cycle/isolate'
 
 import { style, stylesheet } from 'typestyle'
@@ -188,14 +188,14 @@ const dummyComponent =
 
 export const MainMenu =
   (colors: ColorPallete, scope: string, Component: any = dummyComponent) =>
-    ({ DOM, onion, storage, HTTP}: Sources): Sinks => {
+    ({ DOM, onion, storage, HTTP, back}: Sources): Sinks => {
       const component$ =
         isolate
         ( Component(colors)
         , scope
-        )({DOM, onion, storage, HTTP})
+        )({DOM, onion, storage, HTTP, back})
 
-      const action$ = intent(DOM, storage)
+      const action$ = intent(DOM)
       const vdom$: Stream<VNode> =
         view
         ( Style(colors)
@@ -203,16 +203,16 @@ export const MainMenu =
         )(onion.state$, component$.DOM)
 
       return { DOM: vdom$
-             , onion:
-                xs.merge(action$.onion, component$.onion)
+             , onion: xs.merge(action$.onion, component$.onion)
              , router: action$.router
-             , HTTP: component$.HTTP
+             , back: component$.back
+             , storage: xs.merge(action$.storage)
              }
     }
 
 const intent =
   ( DOM: DOMSource
-  , storage: ResponseCollection
+  // , storage: ResponseCollection
   ) => {
     const init$ = xs.of<Reducer>(
       initReducer(defaultState)
@@ -277,23 +277,32 @@ const intent =
           )
         )
 
-    const token$ =
-      storage
-        .session
-        .getItem('jwt-token')
-        .map<Reducer>
-         ( (token:string) =>
-             (prev) =>  (
-               { ...prev
-               , token
-               }
-             )
+    // const token$ =
+    //   storage
+    //     .session
+    //     .getItem('jwt-token')
+    //     .map<Reducer>
+    //      ( (token:string) =>
+    //          (prev) =>  (
+    //            { ...prev
+    //            , token
+    //            }
+    //          )
+    //      )
+
+    const clearToken$ =
+      logoutClick$
+        .mapTo<StorageRequest>
+         ( { target: 'session'
+           , key: 'jwt-token'
+           , value: ''
+           }
          )
 
     return { onion:
               xs.merge
               ( init$
-              , token$
+              // , token$
               , open$
               , close$
               )
@@ -304,6 +313,7 @@ const intent =
               , changeConfig$
               , changeLogs$
               )
+           , storage: clearToken$
            }
   }
 

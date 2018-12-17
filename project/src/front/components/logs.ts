@@ -6,7 +6,7 @@ import { div
        } from '@cycle/dom'
 import { StateSource } from 'cycle-onionify'
 import { HTTPSource } from '@cycle/http'
-import { ResponseCollection } from '@cycle/storage'
+import { BackSource } from './../drivers/back'
 import sampleCombine from 'xstream/extra/sampleCombine'
 // import isolate from '@cycle/isolate'
 import { path
@@ -166,9 +166,9 @@ export const Transitions: Transitions =
 
 export const Logs =
   (colors: ColorPallete) =>
-    ({ DOM, onion, HTTP, storage}: Sources): Sinks => {
+    ({ DOM, onion, back}: Sources): Sinks => {
       const action$ =
-        intent(DOM, storage, HTTP)
+        intent(DOM, back)
       const vdom$: Stream<VNode> =
         view
         ( Style(colors)
@@ -177,7 +177,7 @@ export const Logs =
 
       return { DOM: vdom$
              , onion: action$.onion
-             , HTTP: action$.HTTP
+             , back: action$.back
              }
     }
 
@@ -196,57 +196,42 @@ const couldNotRetrieveAnswer =
 
 const intent =
   ( DOM: DOMSource
-  , storage: ResponseCollection
-  , HTTP: HTTPSource
+  , back: BackSource
   ) => {
     const init$ = xs.of<Reducer>(
       initReducer(defaultState)
     )
 
-    const token$ =
-      storage
-        .session
-        .getItem('jwt-token')
+    const subscribeLogs$ =
+      xs.of({TYPE: 'SUBSCRIBE_LOGS'})
 
-    const botLogsRequest$ =
-      xs.periodic(1000)
-        .compose(sampleCombine(token$))
-        .map(takeSecond)
-        .debug('token')
-        .map
-         ( (token: string) => (
-             { url: `${process.env.BACK_URL}/api/bot-logs`
-             , category: 'logs'
-             , headers:
-               { Authorization: `Bearer ${token}`
-               }
-             , method: 'GET'
-             }
-           )
-         )
+    const logs$ =
+      back
+        .message('LOG')
+        .debug('log')
 
-    const botLogsResponse$ =
-      HTTP
-        .select('logs')
-        .flatten()
-        .map(pathOr(couldNotRetrieveAnswer, ['body', 'logs']))
+    const resetLogs$ =
+      subscribeLogs$
+        .mapTo<Reducer>((prev) => ({...prev, logs: []}))
+
+    const updateLog$ =
+      logs$
         .map<Reducer>
-         ( (logs: string[]) =>
+         ( ({log}:any) =>
              (prev) => (
-             { ...prev
-             , logs: logs
-             }
-           )
+               { ...prev
+               , logs: [...prev.logs, log]
+               }
+             )
          )
 
     return { onion:
                xs.merge
                ( init$
-               , botLogsResponse$
+               , resetLogs$
+               , updateLog$
                )
-           , HTTP:
-               xs.merge
-               ( botLogsRequest$ )
+           , back: subscribeLogs$
            }
   }
 

@@ -21,7 +21,7 @@
       "DOM"
     ],
     "paths": {
-      "utils/*": [ "src/utils/*" ]
+      "utils/*": [ "src/back/utils/*" ]
     }
   },
   // "include": ["src#<{(||)}>#*.ts"],
