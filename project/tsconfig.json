@@ -1,0 +1,29 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": ".",
+    "typeRoots": ["types"],
+    "noEmitOnError": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "sourceMap": true,
+    "noImplicitReturns": false,
+    "strict": true,
+    "strictFunctionTypes": false,
+    "allowJs": true,
+    "lib": [
+      "esnext",
+      "ES2015",
+      "ES7",
+      "ES6",
+      "ES5",
+      "DOM"
+    ],
+    "paths": {
+      "utils/*": [ "src/back/utils/*" ]
+    }
+  },
+  // "include": ["src#<{(||)}>#*.ts"],
+  "exclude": ["node_modules", "build"]
+}
