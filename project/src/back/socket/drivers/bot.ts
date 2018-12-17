@@ -12,7 +12,9 @@ import
   , tail
   } from 'rambda'
 
-const DATA_LOCATION = `${__dirname}/../../../../data`
+const DATA_LOCATION =
+  process.env.DATA_PATH
+  || `${__dirname}/../../../../../data`
 const INSTAPY_LOCATION = `${DATA_LOCATION}/InstaPy`
 const botControl = controls(INSTAPY_LOCATION)
 

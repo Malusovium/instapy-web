@@ -10,6 +10,8 @@ import storageify from 'cycle-storageify';
 import switchPath from 'switch-path';
 import storageDriver from '@cycle/storage';
 
+import { makeBackDriver } from './drivers/back'
+
 import { Component } from './interfaces';
 
 export type DriverThunk = Readonly<[string, () => any]> & [string, () => any]; // work around readonly
@@ -17,22 +19,23 @@ export type DriverThunkMapper = (t: DriverThunk) => DriverThunk;
 
 // Set of Drivers used in this App
 const driverThunks: DriverThunk[] =
-[ ['DOM', () => makeDOMDriver('#app')]
-, ['HTTP', () => makeHTTPDriver()]
-, ['time', () => timeDriver]
-, ['history', () => makeHistoryDriver()]
-, ['storage', () => storageDriver]
-]
+  [ ['DOM', () => makeDOMDriver('#app')]
+  , ['HTTP', () => makeHTTPDriver()]
+  , ['time', () => timeDriver]
+  , ['history', () => makeHistoryDriver()]
+  , ['storage', () => storageDriver]
+  , ['back', () => makeBackDriver()]
+  ]
 
 export const buildDrivers = (fn: DriverThunkMapper) =>
-    driverThunks
-        .map(fn)
-        .map(([n, t]: DriverThunk) => ({ [n]: t }))
-        .reduce((a, c) => Object.assign(a, c), {});
+  driverThunks
+    .map(fn)
+    .map(([n, t]: DriverThunk) => ({ [n]: t }))
+    .reduce((a, c) => Object.assign(a, c), {});
 
 export const driverNames = driverThunks
-    .map(([n, t]) => n)
-    .concat(['onion', 'router']);
+  .map(([n, t]) => n)
+  .concat(['onion', 'router']);
 
 export function wrapMain(main: Component): Component {
     return routerify(

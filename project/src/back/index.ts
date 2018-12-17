@@ -8,9 +8,11 @@ import { sendStatic } from 'utils/static'
 import { createSession } from './socket'
 import { setupSessionHandler } from 'utils/session-handler'
 
+const FRONT_BUILD_PATH = `${__dirname}/../../build`
+
 const sendFrontFile =
   (fileName: string, encoding: string | null = 'utf8') => (
-    { GET: sendStatic(`${__dirname}/../../front/build/${fileName}`, encoding)
+    { GET: sendStatic(FRONT_BUILD_PATH, encoding)
     }
   )
 
@@ -46,7 +48,6 @@ const makeFrontRoutes =
 
 const routes =
   { sub:
-    // { 'api': apiRoutes
     { 'index': serveIndexHTML
     , 'index.html': serveIndexHTML
     , 'app.js': sendFrontFile('app.js')
@@ -61,7 +62,7 @@ const routes =
       }
     , ...makeFrontRoutes(frontRoutes)
     }
-  , GET: sendStatic(`${__dirname}/../../front/build/index.html`)
+  , GET: sendStatic(`${FRONT_BUILD_PATH}/index.html`)
   }
 
 const router =

@@ -9,9 +9,18 @@ import { setupJSONStore } from 'utils/json-store'
 
 import { Main } from './main'
 
-const bcrypt = setupBcrypt(2)
+const DATA_PATH =
+  process.env.DATA_PATH
+  || `${__dirname}/../../../../data`
+
+const isProduction =
+  process.env.PRODUCTION
+    ? true
+    : false
+
+const bcrypt = setupBcrypt(isProduction ? 20 : 2)
 const jwt = setupJWT('MY_SECRET')
-const JSONStore = setupJSONStore(`${__dirname}/../../../data`)
+const JSONStore = setupJSONStore(DATA_PATH)
 
 const userStore =
   JSONStore
