@@ -9,7 +9,7 @@ const Status =
   ({ bot, auth, message }:any) => {
     const startRequest =
       protectedStream
-      ( 'SUBSCRIBE_STATUS' )
+      ('SUBSCRIBE_STATUS')
       (message, auth.authenticated$)
 
     const startStatus$ =
@@ -21,7 +21,6 @@ const Status =
     const status$ =
       bot
         .status$
-        // .compose(dropRepeats())
         .map
          ( (botStatus:string) => (
              { TYPE: 'STATUS'
@@ -31,6 +30,7 @@ const Status =
              }
            )
          )
+        .debug('status')
 
     const startRequestError$ =
       startRequest

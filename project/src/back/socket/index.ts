@@ -6,6 +6,7 @@ import { makeBotDriver } from './drivers/bot'
 import { setupBcrypt } from 'utils/bcrypt'
 import { setupJWT } from 'utils/jwt'
 import { setupJSONStore } from 'utils/json-store'
+import { setupControlManager } from 'utils/bot-controls'
 
 import { Main } from './main'
 
@@ -43,6 +44,8 @@ const configStore =
   , []
   )
 
+const controlManager = setupControlManager(`${DATA_PATH}/InstaPy`)
+
 const createSession =
   (ws:any, sessionID: string) => {
     const terminateSession =
@@ -63,6 +66,7 @@ const createSession =
             makeBotDriver
             ( { getConfig: configStore.get
               , setConfig: configStore.set
+              , controlManager: controlManager
               }
             )
         }
