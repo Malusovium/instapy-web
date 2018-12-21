@@ -81,6 +81,7 @@ export const Style =
       , inner:
         { fontSize: '1em'
         , backgroundImage: backgroundImage
+        , backgroundSize: 'cover'
         , ...csstips.fillParent
         , ...csstips.vertical
         }

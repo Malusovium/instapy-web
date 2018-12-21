@@ -144,7 +144,7 @@ const Main: Component =
       xs.merge
          ( start.bot
          , status.bot
-         , logs.bot
+         // , logs.bot
          , build.bot
          )
 

@@ -250,10 +250,14 @@ const intent =
     const loginSucces$ =
       back.succes('LOGIN')
 
+    const connectError$ =
+      back.error('CONNECT')
+
     const normalButton$ =
       xs.merge
          ( loginError$
          , loginSucces$
+         , connectError$
          )
         .mapTo<Reducer>
          ( (prev) => ({...prev, buttonState: 'normal'}))
