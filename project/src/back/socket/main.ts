@@ -28,6 +28,7 @@ import { Connect } from './components/connect'
 import { Start } from './components/start'
 import { Status } from './components/status'
 import { Logs } from './components/logs'
+import { Config } from './components/config'
 import { Build } from './components/build'
 
 type Sources =
@@ -107,6 +108,14 @@ const Main: Component =
         }
       )
 
+    const config =
+      Config
+      ( { message: JSONMessage$
+        , auth
+        , bot
+        }
+      )
+
     const build =
       Build
       ( { message: JSONMessage$
@@ -129,9 +138,13 @@ const Main: Component =
          , logs.message
              // .debug('log')
          , logs.error$
+         , config.message
+            .debug('config message out')
+         , config.error$
          , build.error$
          )
         .map(JSON.stringify)
+        .debug('Out')
 
     const auth$: any =
       xs.merge
@@ -145,6 +158,7 @@ const Main: Component =
          ( start.bot
          , status.bot
          // , logs.bot
+         , config.bot
          , build.bot
          )
 

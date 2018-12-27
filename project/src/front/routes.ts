@@ -6,6 +6,7 @@ import iconLogo from './assets/instapy-web-icon-filled-white.svg'
 import { MainMenu } from './components/main-menu'
 import { Login } from './components/login'
 import { Bot } from './components/bot'
+import { Config } from './components/config'
 import { Logs } from './components/logs'
 
 export type RouteValue =
@@ -36,7 +37,7 @@ export const routes: Routes =
     , scope: 'mainMenu'
     }
   , '/config':
-    { component: MainMenu(style, 'config')
+    { component: MainMenu(style, 'config', Config)
     , scope: 'mainMenu'
     }
   , '/logs':

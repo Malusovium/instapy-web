@@ -140,6 +140,7 @@ const handleControlActions =
 //
       action$
         .filter(propEq('TYPE', 'SET_CONFIG'))
+        .map(path('DATA.config'))
         .addListener
          ( { next:
                (nextConfig:any) => {
