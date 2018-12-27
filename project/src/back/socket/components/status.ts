@@ -15,12 +15,14 @@ const Status =
     const startStatus$ =
       startRequest
         .validated$
-        .debug('start-log-ping')
-        .mapTo({ TYPE: 'START_STATUS' })
+        // .mapTo(bot.status$)
+        // .debug('start-status-ping')
+        // .mapTo({ TYPE: 'START_STATUS' })
 
     const status$ =
-      bot
-        .status$
+      startStatus$
+        .mapTo(bot.status$)
+        .flatten()
         .map
          ( (botStatus:string) => (
              { TYPE: 'STATUS'
@@ -30,7 +32,18 @@ const Status =
              }
            )
          )
-        .debug('status')
+      // bot
+      //   .status$
+      //   .map
+      //    ( (botStatus:string) => (
+      //        { TYPE: 'STATUS'
+      //        , DATA:
+      //          { status: botStatus
+      //          }
+      //        }
+      //      )
+      //    )
+      //   .debug('status')
 
     const startRequestError$ =
       startRequest
@@ -38,7 +51,7 @@ const Status =
 
     return (
       { message: status$
-      , bot: startStatus$
+      // , bot: startStatus$
       , error$: startRequestError$
       }
     )

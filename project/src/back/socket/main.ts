@@ -26,6 +26,7 @@ import { Login } from './components/login'
 import { Token } from './components/token'
 import { Connect } from './components/connect'
 import { Start } from './components/start'
+import { Stop } from './components/stop'
 import { Status } from './components/status'
 import { Logs } from './components/logs'
 import { Config } from './components/config'
@@ -92,6 +93,14 @@ const Main: Component =
         }
       )
 
+    const stop =
+      Stop
+      ( { message: JSONMessage$
+        , auth
+        , bot
+        }
+      )
+
     const status =
       Status
       ( { message: JSONMessage$
@@ -133,6 +142,7 @@ const Main: Component =
          , login.message
          , login.error$
          , start.error$
+         , stop.error$
          , status.message
          , status.error$
          , logs.message
@@ -156,8 +166,7 @@ const Main: Component =
     const bot$: any =
       xs.merge
          ( start.bot
-         , status.bot
-         // , logs.bot
+         , stop.bot
          , config.bot
          , build.bot
          )

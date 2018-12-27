@@ -17,6 +17,7 @@ type SetupControlManager =
   (projectPath:string) => ControlManager
 const setupControlManager: SetupControlManager =
   (projectPath) => {
+    let botStatus = ''
     let botLogs: string[] = []
     let lastIndexLog = 0
 
@@ -28,17 +29,20 @@ const setupControlManager: SetupControlManager =
        ( 'log'
        , (log:string) => {
            botLogs = [ ...botLogs, log ]
-           // console.log(botLogs)
+         }
+       )
+
+    controlEE
+      .on
+       ( 'status'
+       , (status:string) => {
+           botStatus = status
          }
        )
 
     controls
       .status
       .set((status) => { controlEE.emit('status', status) })
-    //
-    // controls
-    //   .logs
-    //   .set((log) => { controlEE.emit('log', log)} )
 
     const _presentLog =
       (cb:any) =>
@@ -69,7 +73,6 @@ const setupControlManager: SetupControlManager =
     return (
       { start:
           () => {
-            // console.log(botLogs)
             _unlistenLog()
             botLogs = []
             _listenLog()
@@ -83,6 +86,7 @@ const setupControlManager: SetupControlManager =
       , status:
         { add:
             (cb: any) => {
+              cb(botStatus)
               controlEE.on('status', cb)
             }
         , remove:
