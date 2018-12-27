@@ -80,10 +80,13 @@ const handleControlActions =
 
       action$
         .filter(propEq('TYPE', 'STOP'))
+        .debug('well')
         .addListener
          ( { next:
                () => {
-                 controlManager.stop()
+                 controlManager
+                   .stop()
+                   .then(console.log)
                }
            }
          )
@@ -100,7 +103,6 @@ const handleControlActions =
                }
            }
          )
-// jjjjjjjjjjjj
 //       action$
 //         .filter(propEq('TYPE', 'START_STATUS'))
 //         .addListener
