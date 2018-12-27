@@ -75,8 +75,8 @@ export const Style =
         { fontSize: '1em'
         , color: mainText
         , fontFamily: `'Roboto', sans-serif`
-        , height: '100%'
-        , width: '100%'
+        , height: '100vh'
+        , width: '100vw'
         }
       , inner:
         { fontSize: '1em'

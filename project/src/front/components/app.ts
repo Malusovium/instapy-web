@@ -34,6 +34,14 @@ export const defaultState: State = {
 };
 export type Reducer = (prev?: State) => State | undefined;
 
+const URL =
+  document
+    .URL
+    .split('/')[2]
+    .split(':')[0]
+
+console.log(URL)
+
 export function App(sources: Sources): Sinks {
   const initReducer$ = xs.of<Reducer>(
     prevState => (prevState === undefined ? defaultState : prevState)
@@ -61,7 +69,7 @@ export function App(sources: Sources): Sinks {
       .back
       .connection$
       .filter(equals(false))
-      .mapTo(['ws://localhost:9999'])
+      .mapTo([`ws://${URL}:9999`])
 
   const storedToken$ =
     sources

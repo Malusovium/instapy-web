@@ -41,7 +41,10 @@ const tokenStore =
 const configStore =
   JSONStore
   ( 'config'
-  , []
+  , { init: { name: '__init__' }
+    , end: { name: 'end' }
+    , middle: []
+    }
   )
 
 const controlManager = setupControlManager(`${DATA_PATH}/InstaPy`)
