@@ -1,8 +1,10 @@
-import { createServer } from 'http'
+import { createServer as createHTTP } from 'http'
+import { createServer as createHTTPS } from 'https'
+import redirectHTTPS from 'redirect-https'
+import * as Greenlock from 'greenlock-express'
+// import * as greenlock from 'greenlock'
 import * as WebSocket from 'ws'
 import { reduce } from 'rambda'
-// import { sendStatic } from './utils/static'
-// import { routes as apiRoutes } from './routes'
 import { makeRouter } from 'utils/router'
 import { sendStatic } from 'utils/static'
 import { createSession } from './socket'
@@ -103,11 +105,42 @@ const socketSessionHandler = setupSessionHandler(createSession)
 
 const wss = new WebSocket.Server({ noServer: true})
 wss.on('connection', socketSessionHandler.add)
-const server = createServer(handleRequest)
+
+let server
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+  const greenlock =
+    Greenlock
+      .create
+       ( { email: process.env.EMAIL
+         , approvedDomains: [ process.env.DOMAIN ]
+         , server:
+             process.env.NODE_ENV === 'production'
+               ? 'https://acme-v02.api.letsencrypt.org/directory'
+               : 'https://acme-v02.api.letsencrypt.org/directory'
+         , version: 'draft-11'
+         , agreeTos: true
+         , conifgDir: `${__dirname}/../../../../data`
+         , communityMember: false
+         , securityUpdates: false
+         , app: handleRequest
+         }
+       )
+
+  server = greenlock.listen(80, 443)
+
+  // const server80 = createHTTP(gLock.middleware(redirectHTTPS))
+  //
+  // server = createHTTPS(gLock.tlsOptions, handleRequest)
+
+} else {
+  server = createHTTP(handleRequest)
+  server.listen(9999)
+}
+
 server
   .on
    ( 'upgrade'
-   , (request, socket, head) => {
+   , (request: any, socket:any, head:any) => {
        wss
          .handleUpgrade
           ( request
@@ -120,4 +153,4 @@ server
      }
    )
 
-server.listen(9999)
+// // server.listen(9999)
