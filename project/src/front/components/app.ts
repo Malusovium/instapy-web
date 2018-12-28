@@ -35,10 +35,18 @@ export const defaultState: State = {
 export type Reducer = (prev?: State) => State | undefined;
 
 const URL =
-  document
-    .URL
-    .split('/')[2]
-    .split(':')[0]
+  process.env.NODE_ENV === 'development'
+    ? 'localhost:9999'
+    : process.env.DOMAIN
+  // document
+  //   .URL
+  //   .split('/')[2]
+  //   .split(':')[0]
+
+const PROTOCOL =
+  process.env.NODE_ENV === 'development'
+    ? 'ws'
+    : 'wss'
 
 console.log(URL)
 
@@ -69,7 +77,7 @@ export function App(sources: Sources): Sinks {
       .back
       .connection$
       .filter(equals(false))
-      .mapTo([`ws://${URL}:9999`])
+      .mapTo([`${PROTOCOL}://${URL}`])
 
   const storedToken$ =
     sources

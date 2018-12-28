@@ -10,11 +10,13 @@ import { sendStatic } from 'utils/static'
 import { createSession } from './socket'
 import { setupSessionHandler } from 'utils/session-handler'
 
+import { readdirSync } from 'fs'
+
 const FRONT_BUILD_PATH = `${__dirname}/../../build`
 
 const sendFrontFile =
   (fileName: string, encoding: string | null = 'utf8') => (
-    { GET: sendStatic(FRONT_BUILD_PATH, encoding)
+    { GET: sendStatic(`${FRONT_BUILD_PATH}/${fileName}`, encoding)
     }
   )
 
@@ -48,21 +50,35 @@ const makeFrontRoutes =
     }
   )
 
+const makeFrontAssetRoutes =
+  reduce
+  ( (acc, curr: string) => (
+      { ...acc
+      , [curr]:
+          sendFrontFile
+          ( curr
+          , curr.endsWith('.png')
+              ? null
+              : undefined
+          )
+      }
+    )
+  , {}
+  )
+
+  // (fileName: string) => (
+  //   { [fileName]: sendFrontFile(fileName)
+  //   }
+  // )
+
+const frontAssets =
+  readdirSync(FRONT_BUILD_PATH)
+    // .map(makeFrontAssetRoute)
+
 const routes =
   { sub:
-    { 'index': serveIndexHTML
-    , 'index.html': serveIndexHTML
-    , 'app.js': sendFrontFile('app.js')
-    , 'api.js': sendFrontFile('api.js')
-    , 'assets':
-      { sub:
-        { 'c6ec0150-background.png':
-          sendFrontFile(`assets/c6ec0150-background.png`, null)
-        , 'e8d20fff-instapy-web-icon-filled-white.svg':
-          sendFrontFile(`assets/e8d20fff-instapy-web-icon-filled-white.svg`)
-        }
-      }
-    , ...makeFrontRoutes(frontRoutes)
+    { ...makeFrontRoutes(frontRoutes)
+    , ...makeFrontAssetRoutes(frontAssets)
     }
   , GET: sendStatic(`${FRONT_BUILD_PATH}/index.html`)
   }
@@ -119,7 +135,7 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
                : 'https://acme-v02.api.letsencrypt.org/directory'
          , version: 'draft-11'
          , agreeTos: true
-         , conifgDir: `${__dirname}/../../../../data`
+         , configDir: `${__dirname}/../../../data`
          , communityMember: false
          , securityUpdates: false
          , app: handleRequest

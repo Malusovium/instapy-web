@@ -1,9 +1,9 @@
 # Environment type
 # development | staging | production
-NODE_ENV="production"
+NODE_ENV=production
 
 # Domain name (FQDN)
-DOMAIN="example.com"
+DOMAIN=example.com
 
 # Letsencrypt email
-EMAIL="john@example.com"
+EMAIL=john@example.com
