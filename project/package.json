@@ -6,8 +6,8 @@
   "scripts": {
     "front:dev": "parcel ./src/front/index.html",
     "front:build": "parcel build ./src/front/index.html -d ./build",
-    "back:dev": "ts-node-dev -r tsconfig-paths/register ./src/back/index.ts",
-    "back:start": "NODE_ENV=production ts-node src/back/index.ts",
+    "back:dev": "ts-node-dev -r dotenv/config -r tsconfig-paths/register ./src/back/index.ts",
+    "back:start": "ts-node -r dotenv/config -r tsconfig-paths/register ./src/back/index.ts",
     "test": "ava-ts src/**/*-test.ts -w"
   },
   "author": "Malusovium",
@@ -25,6 +25,8 @@
     "cycle-storageify": "^4.0.1",
     "cyclejs-utils": "^4.0.2",
     "cyclic-router": "^6.0.0",
+    "dotenv": "^6.2.0",
+    "greenlock-express": "^2.6.7",
     "instapy-tools": "^0.8.1",
     "jsonwebtoken": "^8.3.0",
     "rambda": "^1.2.6",

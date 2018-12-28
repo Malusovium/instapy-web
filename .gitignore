@@ -3,6 +3,7 @@ data
 InstaPy
 dist
 build
+.env
 .cache
 *bcrypt-hashes.json
 *instapy-api.json

@@ -1,18 +1,19 @@
 import { createServer } from 'http'
+import * as Greenlock from 'greenlock-express'
 import * as WebSocket from 'ws'
 import { reduce } from 'rambda'
-// import { sendStatic } from './utils/static'
-// import { routes as apiRoutes } from './routes'
 import { makeRouter } from 'utils/router'
 import { sendStatic } from 'utils/static'
 import { createSession } from './socket'
 import { setupSessionHandler } from 'utils/session-handler'
 
+import { readdirSync } from 'fs'
+
 const FRONT_BUILD_PATH = `${__dirname}/../../build`
 
 const sendFrontFile =
   (fileName: string, encoding: string | null = 'utf8') => (
-    { GET: sendStatic(FRONT_BUILD_PATH, encoding)
+    { GET: sendStatic(`${FRONT_BUILD_PATH}/${fileName}`, encoding)
     }
   )
 
@@ -34,8 +35,9 @@ const serveIndexHTML =
 
 const frontRoutes =
   [ 'login'
+  , 'bot'
+  , 'config'
   , 'logs'
-  , 'bot-config'
   ]
 
 const makeFrontRoutes =
@@ -46,21 +48,29 @@ const makeFrontRoutes =
     }
   )
 
+const makeFrontAssetRoutes =
+  reduce
+  ( (acc, curr: string) => (
+      { ...acc
+      , [curr]:
+          sendFrontFile
+          ( curr
+          , curr.endsWith('.png')
+              ? null
+              : undefined
+          )
+      }
+    )
+  , {}
+  )
+
+const frontAssets =
+  readdirSync(FRONT_BUILD_PATH)
+
 const routes =
   { sub:
-    { 'index': serveIndexHTML
-    , 'index.html': serveIndexHTML
-    , 'app.js': sendFrontFile('app.js')
-    , 'api.js': sendFrontFile('api.js')
-    , 'assets':
-      { sub:
-        { 'c6ec0150-background.png':
-          sendFrontFile(`assets/c6ec0150-background.png`, null)
-        , 'e8d20fff-instapy-web-icon-filled-white.svg':
-          sendFrontFile(`assets/e8d20fff-instapy-web-icon-filled-white.svg`)
-        }
-      }
-    , ...makeFrontRoutes(frontRoutes)
+    { ...makeFrontRoutes(frontRoutes)
+    , ...makeFrontAssetRoutes(frontAssets)
     }
   , GET: sendStatic(`${FRONT_BUILD_PATH}/index.html`)
   }
@@ -103,11 +113,37 @@ const socketSessionHandler = setupSessionHandler(createSession)
 
 const wss = new WebSocket.Server({ noServer: true})
 wss.on('connection', socketSessionHandler.add)
-const server = createServer(handleRequest)
+
+let server
+if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
+  const greenlock =
+    Greenlock
+      .create
+       ( { email: process.env.EMAIL
+         , approvedDomains: [ process.env.DOMAIN ]
+         , server:
+             process.env.NODE_ENV === 'production'
+               ? 'https://acme-v02.api.letsencrypt.org/directory'
+               : 'https://acme-staging-v02.api.letsencrypt.org/directory'
+         , version: 'draft-11'
+         , agreeTos: true
+         , configDir: `${__dirname}/../../../data`
+         , communityMember: false
+         , securityUpdates: false
+         , app: handleRequest
+         }
+       )
+
+  server = greenlock.listen(80, 443)
+} else {
+  server = createServer(handleRequest)
+  server.listen(9999)
+}
+
 server
   .on
    ( 'upgrade'
-   , (request, socket, head) => {
+   , (request: any, socket:any, head:any) => {
        wss
          .handleUpgrade
           ( request
@@ -120,4 +156,4 @@ server
      }
    )
 
-server.listen(9999)
+// // server.listen(9999)
