@@ -73,7 +73,9 @@ const handleControlActions =
         .addListener
          ( { next:
                () => {
-                 controlManager.start()
+                 controlManager
+                   .start()
+                   .then(console.log)
                }
            }
          )

@@ -132,7 +132,7 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
          , server:
              process.env.NODE_ENV === 'production'
                ? 'https://acme-v02.api.letsencrypt.org/directory'
-               : 'https://acme-v02.api.letsencrypt.org/directory'
+               : 'https://acme-staging-v02.api.letsencrypt.org/directory'
          , version: 'draft-11'
          , agreeTos: true
          , configDir: `${__dirname}/../../../data`
