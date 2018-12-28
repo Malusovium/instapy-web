@@ -1,8 +1,5 @@
-import { createServer as createHTTP } from 'http'
-import { createServer as createHTTPS } from 'https'
-import redirectHTTPS from 'redirect-https'
+import { createServer } from 'http'
 import * as Greenlock from 'greenlock-express'
-// import * as greenlock from 'greenlock'
 import * as WebSocket from 'ws'
 import { reduce } from 'rambda'
 import { makeRouter } from 'utils/router'
@@ -38,8 +35,9 @@ const serveIndexHTML =
 
 const frontRoutes =
   [ 'login'
+  , 'bot'
+  , 'config'
   , 'logs'
-  , 'bot-config'
   ]
 
 const makeFrontRoutes =
@@ -66,14 +64,8 @@ const makeFrontAssetRoutes =
   , {}
   )
 
-  // (fileName: string) => (
-  //   { [fileName]: sendFrontFile(fileName)
-  //   }
-  // )
-
 const frontAssets =
   readdirSync(FRONT_BUILD_PATH)
-    // .map(makeFrontAssetRoute)
 
 const routes =
   { sub:
@@ -143,13 +135,8 @@ if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging')
        )
 
   server = greenlock.listen(80, 443)
-
-  // const server80 = createHTTP(gLock.middleware(redirectHTTPS))
-  //
-  // server = createHTTPS(gLock.tlsOptions, handleRequest)
-
 } else {
-  server = createHTTP(handleRequest)
+  server = createServer(handleRequest)
   server.listen(9999)
 }
 
