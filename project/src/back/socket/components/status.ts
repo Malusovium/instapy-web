@@ -7,21 +7,29 @@ import
 
 const Status =
   ({ bot, auth, message }:any) => {
-    const startRequest =
+    const sub =
       protectedStream
       ('SUBSCRIBE_STATUS')
       (message, auth.authenticated$)
 
+    const unSub =
+      protectedStream
+      ('UN_SUBSCRIBE_STATUS')
+      (message, auth.authenticated$)
+
     const startStatus$ =
-      startRequest
+      sub
         .validated$
-        // .mapTo(bot.status$)
-        // .debug('start-status-ping')
-        // .mapTo({ TYPE: 'START_STATUS' })
+        .mapTo({ TYPE: 'START_STATUS' })
+
+    const stopStatus$ =
+      unSub
+        .validated$
+        .mapTo({ TYPE: 'STOP_STATUS' })
 
     const status$ =
-      startStatus$
-        .mapTo(bot.status$)
+      bot
+        .status$
         .flatten()
         .map
          ( (botStatus:string) => (
@@ -32,27 +40,14 @@ const Status =
              }
            )
          )
-      // bot
-      //   .status$
-      //   .map
-      //    ( (botStatus:string) => (
-      //        { TYPE: 'STATUS'
-      //        , DATA:
-      //          { status: botStatus
-      //          }
-      //        }
-      //      )
-      //    )
-      //   .debug('status')
 
-    const startRequestError$ =
-      startRequest
-        .error$
+    const protectedError$ =
+      xs.merge(sub.error$, unSub.error$)
 
     return (
       { message: status$
-      // , bot: startStatus$
-      , error$: startRequestError$
+      , bot: xs.merge(startStatus$, stopStatus$)
+      , error$: protectedError$
       }
     )
   }

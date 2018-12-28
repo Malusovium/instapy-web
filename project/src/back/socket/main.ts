@@ -146,7 +146,6 @@ const Main: Component =
          , status.message
          , status.error$
          , logs.message
-             // .debug('log')
          , logs.error$
          , config.message
             .debug('config message out')
@@ -169,6 +168,7 @@ const Main: Component =
          , stop.bot
          , config.bot
          , build.bot
+         , logs.bot
          )
 
     return (

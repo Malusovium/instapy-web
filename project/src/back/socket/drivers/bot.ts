@@ -24,46 +24,106 @@ const { raw, setupMethod, setupCreate } = api
 const toPythonMethod = setupMethod(raw)
 const toPythonCreate = setupCreate(INSTAPY_LOCATION)
 
-const setupStatusProducer =
-  (status: Watcher) => {
-    let statusCb: (status:string) => void
+const setupStatusStream =
+  (status: Watcher) =>
+    (action$: Stream<any>) => {
+      const setupStatusProducer =
+        () => {
+          let statusCb: (status:string) => void
 
-    return (
-      { start:
-          (listener:any) => {
-            statusCb =
-              (botStatus:string) => {
-                listener.next(botStatus)
-              }
-            status.add(statusCb)
-          }
-      , stop:
-          () => {
-            status.remove(statusCb)
-          }
-      }
-    )
-  }
+          return (
+            { start:
+                (listener:any) => {
+                  statusCb =
+                    (botStatus:string) => {
+                      listener.next(botStatus)
+                    }
+                  status.add(statusCb)
+                }
+            , stop:
+                () => {
+                  status.remove(statusCb)
+                }
+            }
+          )
+        }
 
-const setupLogsProducer =
-  (logs: Watcher) => {
-    let logCb: (status: string) => void
-    return (
-      { start:
-          (listener:any) => {
-            logCb =
-              (log:string) => {
-                listener.next(log)
-              }
-            logs.add(logCb)
-          }
-      , stop:
-          () => {
-            logs.remove(logCb)
-          }
-      }
-    )
-  }
+      const statusProducer =
+        { start:
+            (listener: any) => {
+              action$
+                .filter(propEq('TYPE', 'START_STATUS'))
+                .addListener
+                 ( { next:
+                      () => {
+                        const status$ = xs.create(setupStatusProducer())
+                        listener.next(status$)
+                      }
+                   }
+                 )
+            }
+        , stop: () => {}
+        }
+
+      const start$ = xs.create(statusProducer)
+
+      const stop$ =
+        action$
+          .filter(propEq('TYPE', 'STOP_LOGS'))
+          .mapTo(xs.never())
+
+      return xs.merge(start$, stop$)
+    }
+
+const setupLogsStream =
+  (logs: Watcher) =>
+    (action$: Stream<any>) => {
+      const setupLogProducer =
+        () => {
+          let logCb: (status: string) => void
+          return (
+            { start:
+                (listener:any) => {
+                  logCb =
+                    (log:string) => {
+                      listener.next(log)
+                    }
+                  logs.add(logCb)
+                }
+            , stop:
+                () => {
+                  logs.remove(logCb)
+                }
+            }
+          )
+        }
+
+      const logProducer =
+        { start:
+            (listener: any) => {
+              action$
+                .filter(propEq('TYPE', 'START_LOGS'))
+                .addListener
+                 ( { next:
+                      () => {
+                        const log$ = xs.create(setupLogProducer())
+                        listener.next(log$)
+                      }
+                   }
+                 )
+            }
+        , stop: () => {}
+        }
+
+      const start$ = xs.create(logProducer)
+
+      const stop$ =
+        action$
+          .filter(propEq('TYPE', 'STOP_LOGS'))
+          .mapTo(xs.never())
+
+      return xs.merge(start$, stop$)
+    }
 
 const handleControlActions =
   (controlManager:any, setConfig: SetConfig) =>
@@ -116,25 +176,6 @@ const handleControlActions =
 //
 //       action$
 //         .filter(propEq('TYPE', 'STOP_STATUS'))
-//         .addListener
-//          ( { next:
-//               () => {
-//               }
-//            }
-//          )
-//
-//       action$
-//         .filter(propEq('TYPE', 'START_LOGS'))
-//         .debug('came here')
-//         .addListener
-//          ( { next:
-//               () => {
-//               }
-//            }
-//          )
-//
-//       action$
-//         .filter(propEq('TYPE', 'STOP_LOGS'))
 //         .addListener
 //          ( { next:
 //               () => {
@@ -228,19 +269,23 @@ const makeBotDriver: MakeBotDriver =
       ( controlManager, setConfig )
       ( action$.debug('bot in') )
 
-      const statusProducer =
-        setupStatusProducer(controlManager.status)
-      const logsProducer =
-        setupLogsProducer(controlManager.logs)
+      const status$ =
+        setupStatusStream
+        (controlManager.status)
+        (action$)
+      const logs$ =
+        setupLogsStream
+        (controlManager.logs)
+        (action$)
       const configProducer =
         setupConfigProducer
         (getConfig)
         (action$.filter(propEq('TYPE', 'GET_CONFIG')))
 
       return (
-        { status$: xs.create(statusProducer)
+        { status$: status$
         , config$: xs.create(configProducer)
-        , logs$: xs.create(logsProducer).debug('Came here')
+        , logs$: logs$
         }
       )
     }

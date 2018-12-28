@@ -12,19 +12,30 @@ import
 
 const Logs =
   ({ bot, auth, message }:any) => {
-    const startRequest =
+    const sub =
       protectedStream
       ( 'SUBSCRIBE_LOGS' )
       (message, auth.authenticated$)
 
+    const unSub =
+      protectedStream
+      ( 'UN_SUBSCRIBE_LOGS' )
+      (message, auth.authenticated$)
+
     const startLogs$ =
-      startRequest
+      sub
         .validated$
-        .debug('start-log-ping')
+        .mapTo({ TYPE: 'START_LOGS' })
+
+    const stopLogs$ =
+      unSub
+        .validated$
+        .mapTo({ TYPE: 'STOP_LOGS' })
 
     const logs$ =
-      startLogs$
-        .mapTo(bot.logs$)
+      bot
+        .logs$
+        .debug('new')
         .flatten()
         .map
          ( (log:string) => (
@@ -36,13 +47,13 @@ const Logs =
            )
          )
 
-    const startRequestError$ =
-      startRequest
-        .error$
+    const protectedError$ =
+      xs.merge(sub.error$, unSub.error$)
 
     return (
       { message: logs$
-      , error$: startRequestError$
+      , bot: xs.merge(startLogs$, stopLogs$)
+      , error$: protectedError$
       }
     )
   }
