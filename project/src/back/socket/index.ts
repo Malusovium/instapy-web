@@ -1,4 +1,5 @@
 import { run } from '@cycle/run'
+import { readFileSync } from 'fs'
 import { makeMessageDriver } from './drivers/message'
 import { makeAuthDriver } from './drivers/auth'
 import { makeBotDriver } from './drivers/bot'
@@ -41,10 +42,12 @@ const tokenStore =
 const configStore =
   JSONStore
   ( 'config'
-  , { init: { name: '__init__' }
-    , end: { name: 'end' }
-    , middle: []
-    }
+  , JSON.parse
+    ( readFileSync
+      ( `${__dirname}/../../../default-config.json`
+      , 'utf8'
+      )
+    )
   )
 
 const controlManager = setupControlManager(`${DATA_PATH}/InstaPy`)

@@ -3,6 +3,7 @@ data
 InstaPy
 dist
 build
+nohup.out
 .env
 .cache
 *bcrypt-hashes.json
