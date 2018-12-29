@@ -87,21 +87,16 @@ const dom =
               }
             , i('.im.im-angle-up')
             )
-          , div
-            ( { class:
-                { [styles.pickListWrapper]: true
-                , [styles.hidden]: !pickListOpen
-                }
-              }
-            , pickList(childComponents)
-            )
-          , div
-            ( { class:
-                { [styles.hidden]: pickListOpen
-                }
-              }
-            , showOnlyActive(childComponents, active)
-            )
+          , pickListOpen
+              ? div
+                ( { class:
+                    { [styles.pickListWrapper]: true
+                    }
+                  }
+                , pickList(childComponents)
+                )
+              : div
+                ( showOnlyActive(childComponents, active) )
           ]
         )
       ]

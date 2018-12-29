@@ -1,8 +1,8 @@
 // view
-import { Stream } from 'xstream'
+import xs, { Stream } from 'xstream'
 import { div
+       , i
        , h4
-       , textarea
        } from '@cycle/dom'
 import { State } from './types'
 import * as styles from './styles'
@@ -12,10 +12,12 @@ import { join } from 'rambda'
 import { mustArray } from './../../../utils/must'
 
 const dom =
-  ( { name
-    , isIncluded
-    , value
-    }
+  ( [ { name
+      , isIncluded
+      // , value
+      }
+    , itemNodes
+    ]
   ) =>
     div
     ( `.${styles.container}`
@@ -31,27 +33,27 @@ const dom =
           , name
           )
         )
-      , textarea
-        ( { class:
-            { [styles.textarea]: true
-            , [styles.hidden]: !isIncluded
+      , itemNodes
+      , div
+        ( `.${styles.addWrapper}`
+        , div
+          ( { dataset:
+              { add: true
+              }
+            , class:
+              { [styles.plus]: true
+              }
             }
-          , props: { value: value }
-          }
+          , i('.im.im-plus')
+          )
         )
       ]
     )
 
 const view =
-  (state$: Stream<State>) =>
-    state$
-      .map
-       ( (state) => (
-           { ...state
-           , value: join(' ', state.value || [])
-           }
-         )
-       )
+  (state$: Stream<State>, itemNodes$) =>
+    xs.combine(state$, itemNodes$)
+      .debug('view')
       .map(dom)
 
 export
