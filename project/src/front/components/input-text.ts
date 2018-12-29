@@ -35,11 +35,13 @@ export interface Transitions {
 
 export type State =
   { labelText: string
+  , type: 'text' | 'password'
   , value: string
   }
 
 export const defaultState: State =
   { labelText: 'label'
+  , type: 'text'
   , value: ''
   }
 
@@ -145,6 +147,7 @@ const view = (css:Classes, trans:Transitions) =>
     state$
       .map
        ( ( { labelText
+           , type
            , value
            }
          ) =>
@@ -155,7 +158,7 @@ const view = (css:Classes, trans:Transitions) =>
                (`.${css.inner}`
                , { style: trans.inner}
                , [ label(`.${css.label}`, labelText)
-                 , input(`.${css.input}`, { props: { value: value } })
+                 , input(`.${css.input}`, { props: { value: value, type: type} })
                  ]
                )
              ]

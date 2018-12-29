@@ -97,21 +97,52 @@ export function App(sources: Sources): Sinks {
          )
        )
 
+  const connectToken$ =
+    sources
+      .back
+      .message('TOKEN')
+      .debug('token')
+      .map<StorageRequest>
+       ( ({token}: any) => (
+           { target: 'session'
+           , key: 'jwt-token'
+           , value: token
+           }
+         )
+       )
+
   const connectSucces$ =
     sources
       .back
       .succes('CONNECT')
+
+  const loginSucces$ =
+    sources
+      .back
+      .succes('LOGIN')
+
+  const toBot$ =
+    xs.merge(connectSucces$, loginSucces$)
       .mapTo('/bot')
 
   const connectError$ =
     sources
       .back
       .error('CONNECT')
+
+  const loginError$ =
+    sources
+      .back
+      .error('LOGIN')
+
+  const toLogin$ =
+    xs.merge(connectError$, loginError$)
       .mapTo('/login')
 
   return (
     { ...sinks
-    , router: xs.merge(connectSucces$, connectError$, sinks.router)
+    , storage: xs.merge(sinks.storage, connectToken$)
+    , router: xs.merge(sinks.router, toBot$, toLogin$)
     , onion: xs.merge(initReducer$, sinks.onion)
     , back: xs.merge(socket$, connect$, sinks.back.debug('actions'))
     }

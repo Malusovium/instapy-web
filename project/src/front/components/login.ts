@@ -64,6 +64,7 @@ export const defaultState: State =
     }
   , passWord:
     { labelText: 'Password'
+    , type: 'password'
     , value: ''
     }
   }
@@ -189,8 +190,8 @@ export const Login = (colors: ColorPallete) =>
          , userName$.onion
          , passWord$.onion
          )
-      , storage: action$.storage
-      , router: action$.router
+      // , storage: action$.storage
+      // , router: action$.router
       , back: action$.back
       }
     )
@@ -274,18 +275,18 @@ const intent =
              )
          )
 
-    const loginToken$ =
-      back
-        .message('TOKEN')
-        .debug('token')
-        .map<StorageRequest>
-         ( ({token}: any) => (
-             { target: 'session'
-             , key: 'jwt-token'
-             , value: token
-             }
-           )
-         )
+    // const loginToken$ =
+    //   back
+    //     .message('TOKEN')
+    //     .debug('token')
+    //     .map<StorageRequest>
+    //      ( ({token}: any) => (
+    //          { target: 'session'
+    //          , key: 'jwt-token'
+    //          , value: token
+    //          }
+    //        )
+    //      )
 
     const clearUserCredentials$ =
       loginSucces$
@@ -304,9 +305,9 @@ const intent =
            )
          )
 
-    const changeRoute$ =
-      loginToken$
-        .mapTo('/bot')
+    // const changeRoute$ =
+    //   loginToken$
+    //     .mapTo('/bot')
 
     return (
       { onion:
@@ -317,8 +318,10 @@ const intent =
           , errorMessage$
           , clearUserCredentials$
           )
-      , router: xs.merge(changeRoute$)
-      , storage: xs.merge(loginToken$)
+      , router: xs.of()
+      // , router: xs.merge(changeRoute$)
+      , storage: xs.of()
+      // , storage: xs.merge(loginToken$)
       , back: xs.merge(loginRequest$)
       }
     )
