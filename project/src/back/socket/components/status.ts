@@ -20,6 +20,7 @@ const Status =
     const startStatus$ =
       sub
         .validated$
+        .debug('start_status')
         .mapTo({ TYPE: 'START_STATUS' })
 
     const stopStatus$ =

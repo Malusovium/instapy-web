@@ -27,7 +27,7 @@
     "cyclic-router": "^6.0.0",
     "dotenv": "^6.2.0",
     "greenlock-express": "^2.6.7",
-    "instapy-tools": "^0.8.1",
+    "instapy-tools": "^0.8.4",
     "jsonwebtoken": "^8.3.0",
     "rambda": "^1.2.6",
     "switch-path": "^1.2.0",

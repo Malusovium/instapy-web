@@ -75,8 +75,13 @@ const setupControlManager: SetupControlManager =
           () => {
             _unlistenLog()
             botLogs = []
-            _listenLog()
-            return controls.start()
+            const started =
+              controls
+                .start()
+
+            // _listenLog()
+            started.then(_listenLog)
+            return started
           }
       , stop:
           () => {
