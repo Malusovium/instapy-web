@@ -1,6 +1,6 @@
 // styles
 import { style} from 'typestyle'
-import { vertical } from 'csstips'
+import { vertical, horizontal } from 'csstips'
 
 const container =
   style
@@ -37,16 +37,29 @@ const included =
   ( { background: '#6c6' }
   )
 
-const textarea =
+const addWrapper =
   style
-  ( { color: '#444'
+  ( { color: '#ddd'
+    , justifyContent: 'center'
+    }
+  , horizontal
+  )
+
+const plus =
+  style
+  ( { cursor: 'pointer'
+    , backgroundColor: '#7161ef'
+    , borderRadius: '.2em'
+    , padding: '.6em'
+    , paddingBottom: '.3em'
     }
   )
 
 export
   { container
+  , addWrapper
   , name
   , hidden
   , included
-  , textarea
+  , plus
   }

@@ -53,29 +53,22 @@ const intent =
            )
          )
 
-    const input$ =
+    const add$ =
       DOM
-        .select('textarea')
-        .events('input')
-        .map(path('target.value'))
-        .map(replace(/#/g, ' #'))
-        .map(split(' '))
-        .map(filterOut(''))
-        .map(filterOut('#'))
-        .debug('arr')
-        .map
-         ( (newValue) =>
-             (prevState) => (
-               { ...prevState
-               , value: newValue
-               }
-             )
+        .select('[data-add]')
+        .events('click')
+        .mapTo
+         ( (prev) => (
+             { ...prev
+             , value: [ ...prev.value, '' ]
+             }
+           )
          )
 
     return xs.merge
               ( init$
               , include$
-              , input$
+              , add$
               )
   }
 
