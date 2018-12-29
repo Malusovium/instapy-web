@@ -327,7 +327,6 @@ const makeBackDriver: MakeBackDriver =
               message$
                 .debug('inMessage')
                 .filter(propEq('TYPE', type))
-                // .debug('Message')
                 .map(path('DATA'))
         , succes:
             (subType) =>

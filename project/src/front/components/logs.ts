@@ -1,4 +1,5 @@
 import xs, { Stream } from 'xstream'
+import buffer from 'xstream/extra/buffer'
 import { div
        , input
        , VNode
@@ -214,13 +215,19 @@ const intent =
       subscribeLogs$
         .mapTo<Reducer>((prev) => ({...prev, logs: []}))
 
+    const bufferStream$ =
+      xs.periodic(100)
+
     const updateLog$ =
       logs$
+        .map(path('log'))
+        .compose(buffer(bufferStream$))
+        .debug('well')
         .map<Reducer>
-         ( ({log}:any) =>
+         ( (logs:any) =>
              (prev) => (
                { ...prev
-               , logs: [...prev.logs, log]
+               , logs: [...prev.logs, ...logs]
                }
              )
          )
