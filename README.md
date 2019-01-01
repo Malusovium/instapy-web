@@ -11,12 +11,6 @@ A gui for instapy in the browser!
 * node > 10
 * linux, ubuntu > 16
 
-### ScreenShots
-
-![Login Page](https://github.com/Malusovium/instapy-web/login.png)
-![Bot Page](https://github.com/Malusovium/instapy-web/bot.png)
-![Config Page](https://github.com/Malusovium/instapy-web/config.png)
-
 ### Installation
 
 Clone the project
@@ -32,8 +26,7 @@ cd instapy-web
 Change environment variables
 Note dosen't have to be vim just an editor o
 ```sh
-cp dotEnv .env
-vim .env
+vim dotEnv
 ```
 
 Make sure you have an A record pointing to yourdomain.
@@ -44,11 +37,6 @@ NODE_ENV=production
 DOMAIN=mydomain.com
 
 EMAIL=myEmail@gimail.com
-
-USER_NAME=myUser
-PASS_WORD=myPass
-
-JWT_SECRET=MySecret
 ```
 
 Install dependancies

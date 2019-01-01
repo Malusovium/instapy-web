@@ -20,24 +20,15 @@ const isProduction =
     ? true
     : false
 
-const JWT_SECRET =
-  process.env.JWT_SECRET
-  || 'MY_SECRET'
-
-const CREDENTIALS =
-  { userName: process.env.USER_NAME || 'admin'
-  , passWord: process.env.PASS_WORD || 'password'
-  }
-
 const bcrypt = setupBcrypt(isProduction ? 20 : 2)
-const jwt = setupJWT(JWT_SECRET)
+const jwt = setupJWT('MY_SECRET')
 const JSONStore = setupJSONStore(DATA_PATH)
 
 const userStore =
   JSONStore
   ( 'user'
-  , { userName: CREDENTIALS.userName
-    , passWord: bcrypt.createSync(CREDENTIALS.passWord)
+  , { userName: 'henkie'
+    , passWord: bcrypt.createSync('password')
     }
   )
 
