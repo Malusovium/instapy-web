@@ -13,9 +13,9 @@ A gui for instapy in the browser!
 
 ### ScreenShots
 
-![Login Page](https://github.com/Malusovium/instapy-web/login.png)
-![Bot Page](https://github.com/Malusovium/instapy-web/bot.png)
-![Config Page](https://github.com/Malusovium/instapy-web/config.png)
+![Login Page](https://github.com/Malusovium/instapy-web/blob/master/login.png)
+![Bot Page](https://github.com/Malusovium/instapy-web/blob/master/bot.png)
+![Config Page](https://github.com/Malusovium/instapy-web/blob/master/config.png)
 
 ### Installation
 
