@@ -53,7 +53,6 @@ const method =
         DOM
           .select('[data-order]')
           .events('click')
-          .debug('came here')
           .map(path('currentTarget.dataset.order'))
 
       const deleteClick$ =
@@ -65,7 +64,7 @@ const method =
       return (
         { DOM:
             view
-            ( onion.state$.debug('InstapyMethod State')
+            ( onion.state$
             , childComponentsSinks.DOM
             )
         , onion:

@@ -87,7 +87,6 @@ const handleRequest =
     route(req)
       .then
        ( (mess) => {
-         console.log(req.url, mess)
          if (req.url.endsWith('.png')){
            res.writeHead
                ( 200

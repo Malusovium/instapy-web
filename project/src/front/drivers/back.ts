@@ -74,21 +74,17 @@ const setupSocketManager =
     const _handleIncommingMessage =
       (message: Message | SuccesMessage | ErrorMessage) => {
         if ((<SuccesMessage>message).TYPE === 'SUCCES') {
-          console.log(message)
           if (typeof watchers.succes === 'function') {
-            console.log('succes')
             watchers.succes
             (<SuccesMessage> message)
           }
         } else if ((<ErrorMessage>message).TYPE === 'ERROR') {
           if (typeof watchers.error === 'function') {
-            console.log('error')
             watchers.error
             (<ErrorMessage> message)
           }
         } else {
           if (typeof watchers.message === 'function') {
-            console.log('normal')
             watchers.message
             (<Message> message)
           }
@@ -121,8 +117,11 @@ const setupSocketManager =
     const _send: SendMethod =
       (message) => {
         if (socket !== null) {
-          console.log('came here')
-          socket.send(message)
+          try {
+            socket.send(message)
+          } catch (e) {
+            console.error(e)
+          }
         }
       }
 
@@ -170,7 +169,7 @@ const setupSocketManager =
         }
       , send:
           (message: Message) => {
-            if (socket !== null) {
+            if (socket !== null && socket !== undefined) {
               const stringifiedMessage = JSON.stringify(message)
               socket.send(stringifiedMessage)
             }
@@ -262,7 +261,6 @@ const setupHandleActions: SetupHandleActions =
 
       action$
         .filter(isType('Object'))
-        .debug('well?')
         .addListener
          ( { next: (message) => {
                send(<Message>message)
@@ -276,9 +274,7 @@ type BackSink =
   Stream<Action>
 type BackSource =
   { connection$: Stream<boolean | {}>
-  // { connection$: MemoryStream<boolean>
   , message: (type: string) => Stream<Message>
-  // , succes: (subType: string) => Stream<SuccesMessage>
   , succes: (subType: string) => Stream<true>
   , error: (subType: string) => Stream<string>
   }
@@ -287,11 +283,6 @@ type MakeBackDriver =
   () =>
     (action$: BackSink) =>
       BackSource
-    // { connection$: Stream<boolean>
-    // , message: (type: string) => Stream<Message>
-    // , succes: (subType: string) => Stream<SuccesMessage>
-    // , error: (subType: string) => Stream<ErrorMessage>
-    // }
 
 const makeBackDriver: MakeBackDriver =
   () =>
@@ -325,21 +316,17 @@ const makeBackDriver: MakeBackDriver =
         , message:
             (type) =>
               message$
-                .debug('inMessage')
                 .filter(propEq('TYPE', type))
                 .map(path('DATA'))
         , succes:
             (subType) =>
               succes$
                 .filter(propEq('SUB_TYPE', subType))
-                .debug('Succes')
                 .mapTo<true>(true)
-                .debug('Succes, mapped')
         , error:
             (subType) =>
               error$
                 .filter(propEq('SUB_TYPE', subType))
-                .debug('Error')
                 .map(path('MESSAGE'))
         }
       )

@@ -209,7 +209,6 @@ const intent =
     const logs$ =
       back
         .message('LOG')
-        .debug('log')
 
     const resetLogs$ =
       subscribeLogs$
@@ -222,7 +221,6 @@ const intent =
       logs$
         .map(path('log'))
         .compose(buffer(bufferStream$))
-        .debug('well')
         .map<Reducer>
          ( (logs:any) =>
              (prev) => (

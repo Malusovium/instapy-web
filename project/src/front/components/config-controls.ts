@@ -137,7 +137,6 @@ const intent = (DOM: DOMSource, state$: any, back: any): Stream<Reducer> => {
   const config$ =
     back
       .message('CONFIG')
-      .debug('dit something')
       .map(path('config'))
       .map
        ( ({init, end, middle}) =>
@@ -176,7 +175,6 @@ const intent = (DOM: DOMSource, state$: any, back: any): Stream<Reducer> => {
            }
          )
        )
-      // .mapTo({TYPE: 'GET_CONFIG'})
 
   const save$ =
     DOM

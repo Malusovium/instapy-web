@@ -229,9 +229,7 @@ const intent =
       loginClick$
         .compose(sampleCombine(state$))
         .map(takeSecond)
-        .debug('this')
         .filter(propEq('buttonState', 'normal'))
-        .debug('this two')
         .map(pick(['userName', 'passWord']))
         .map(pluck('value'))
         .map
@@ -246,7 +244,7 @@ const intent =
          )
 
     const loginError$ =
-      back.error('LOGIN').debug('login err')
+      back.error('LOGIN')
 
     const loginSucces$ =
       back.succes('LOGIN')
@@ -265,7 +263,6 @@ const intent =
 
     const errorMessage$ =
       loginError$
-        .debug('Err')
         .map<Reducer>
          ( (message: string) =>
              (prev) => (
@@ -274,19 +271,6 @@ const intent =
                }
              )
          )
-
-    // const loginToken$ =
-    //   back
-    //     .message('TOKEN')
-    //     .debug('token')
-    //     .map<StorageRequest>
-    //      ( ({token}: any) => (
-    //          { target: 'session'
-    //          , key: 'jwt-token'
-    //          , value: token
-    //          }
-    //        )
-    //      )
 
     const clearUserCredentials$ =
       loginSucces$
@@ -304,10 +288,6 @@ const intent =
              }
            )
          )
-
-    // const changeRoute$ =
-    //   loginToken$
-    //     .mapTo('/bot')
 
     return (
       { onion:

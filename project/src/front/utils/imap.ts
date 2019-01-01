@@ -7,14 +7,11 @@ type IMap =
 
 const iMap: IMap =
   (fn) =>
-    (arr) => {
-      console.log(arr)
-
-      return compose<any, any, any>
+    (arr) =>
+      compose<any, any, any>
       ( map(([index, value]) => fn(value, index))
       , zip(range(0, arr.length))
       )(arr)
-    }
 
 export
   { iMap

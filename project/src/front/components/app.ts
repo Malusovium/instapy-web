@@ -34,7 +34,6 @@ export const defaultState: State = {
 };
 export type Reducer = (prev?: State) => State | undefined;
 
-console.log(process.env.NODE_ENV)
 const URL =
   process.env.NODE_ENV === 'development'
     ? 'localhost:9999'
@@ -101,7 +100,6 @@ export function App(sources: Sources): Sinks {
     sources
       .back
       .message('TOKEN')
-      .debug('token')
       .map<StorageRequest>
        ( ({token}: any) => (
            { target: 'session'
@@ -144,7 +142,7 @@ export function App(sources: Sources): Sinks {
     , storage: xs.merge(sinks.storage, connectToken$)
     , router: xs.merge(sinks.router, toBot$, toLogin$)
     , onion: xs.merge(initReducer$, sinks.onion)
-    , back: xs.merge(socket$, connect$, sinks.back.debug('actions'))
+    , back: xs.merge(socket$, connect$, sinks.back)
     }
   )
 }

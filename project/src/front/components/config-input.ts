@@ -186,37 +186,6 @@ export const Transitions: Transitions =
     ( [ transition('opacity', 1)('0', { add: '1', rem: '0'} ) ] )
  }
 
-// const methodLens =
-//   (methodName) => (
-//     { get: (parentState) => (
-//         { ...parentState._methods[methodName]
-//         , name: methodName
-//         }
-//       )
-//     , set: (parentState, childState) => (
-//         { ...parentState
-//         , _methods:
-//           { ...parentState._methods
-//           , [methodName]: childState
-//           }
-//         , methods:
-//           { ...parentState.methods
-//           , [methodName]: childState.value
-//           }
-//         }
-//       )
-//     }
-//   )
-//
-// const isolatedMethod =
-//   (args, methodName) =>
-//     isolate
-//     ( method(args)
-//     , { onion: methodLens(methodName)
-//       , '*': methodName
-//       }
-//     )
-//
 const staticMethods =
   [ '__init__'
   , 'end'
@@ -239,8 +208,6 @@ export const ConfigInput =
         , Arg({})
         )
 
-      console.log(interfaceApi)
-
       const init =
         isolate
         ( interfaceApi.__init__
@@ -255,11 +222,6 @@ export const ConfigInput =
         )
         ( { DOM, onion } )
       const InstapyMethod = InstapyMethodWrapper(interfaceApi)
-      // const instapyInit =
-      //   isolate
-      //   ( InstapyMethod
-      //   , '__init__'
-      //   )({DOM, onion})
 
       const InstapyMethodList =
         makeCollection
@@ -306,7 +268,6 @@ export const ConfigInput =
           }
         )
         ({ DOM, onion })
-      // const instapyM = interfaceApi.__init__({DOM, onion})
 
       const action$: Stream<Reducer> =
         intent
@@ -320,23 +281,12 @@ export const ConfigInput =
         ( Style(colors)
         , Transitions
         )
-        ( onion.state$.debug('config')
+        ( onion.state$
         , init.DOM
         , end.DOM
         , instapyMethodList.DOM
         , addButton.DOM
         )
-
-      // const virtualOrder$ =
-      //   onion
-      //     .state$
-      //     .map(path('config'))
-      //     .map(map(path('order')))
-      //     .compose(dropRepeats((o, n) => equals(o, n)))
-      //     .debug('order')
-      //     .map( (newVirtualOrder) => (prev) => ({ ...prev, virtualOrder: newVirtualOrder}))
-        // (onion.state$.debug('config'), instapyInit.DOM)
-        // (onion.state$, instapyM.DOM)
 
       return { DOM: vdom$
              , onion:
@@ -346,13 +296,9 @@ export const ConfigInput =
                     , end.onion
                     , instapyMethodList.onion
                     , addButton.onion
-                    // , virtualOrder$
                     )
              }
     }
-
-const LY =
-  (val) => { console.log(val); return val }
 
 const sortOrder =
   compose
@@ -369,10 +315,6 @@ const arrIndexUpSwitch =
         arr[index -1].order = index
         arr[index].order = index - 1
         const newArr = sortOrder(arr)
-          // sort
-          // ( (a, b) => a.order - b.order
-          // , arr
-          // )
 
         return newArr
       }
@@ -416,7 +358,6 @@ const intent =
                  return (
                  { ...prev
                  , middle: newMiddle
-                 // , virtualOrder: map(path('order'), newConfig)
                  }
                )
              }
@@ -432,7 +373,6 @@ const intent =
                return (
                  { ...prev
                  , middle: newMiddle
-                 // , virtualOrder: map(path('order'), newConfig)
                  }
                )
              }
@@ -452,23 +392,12 @@ const intent =
                )
              }
          )
-      // xs.merge(up$, down$)
-      //   .debug('ping')
-      //   .mapTo((prev) => prev)
-
-    // const orderDown$ =
-    //   downk
 
     return xs.merge(init$, orderUp$, orderDown$, deleteElemConfig$)
   }
 
 const wrapInstapyMethod =
   (instapyMethod, index) =>
-    // div
-    // ( [ div({ dataset: { itemNum: String(index) } })
-    //   , instapyMethod
-    //   ]
-    // )
     instapyMethod
 
 const view = (css:Classes, trans:Transitions) =>

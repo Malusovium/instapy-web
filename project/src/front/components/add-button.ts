@@ -5,7 +5,6 @@ import { div
        , DOMSource 
        } from '@cycle/dom'
 import { StateSource } from 'cycle-onionify'
-// import isolate from '@cycle/isolate'
 
 import { style, stylesheet } from 'typestyle'
 import * as csstips from 'csstips'
@@ -194,9 +193,7 @@ const intent = (DOM: DOMSource): Stream<Reducer> => {
 
   const add$ =
     pick$
-      .debug('Pre pick value')
       .map(path('target.dataset.index'))
-      // .debug('Pick value')
       .map
        ( (index) =>
            (prev) => (
@@ -206,7 +203,6 @@ const intent = (DOM: DOMSource): Stream<Reducer> => {
                , { name: prev.pickList[index]
                  , order: prev.arr.length
                  }
-               // , prev.addFn(prev.pickList[index])
                ]
              }
            )
@@ -238,8 +234,6 @@ const pickListItem =
         }
       , value
       )
-
-const lY = (value) => { console.log(value); return value }
 
 const iMap =
   (fn: any) =>

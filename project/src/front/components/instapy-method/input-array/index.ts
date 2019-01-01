@@ -28,9 +28,7 @@ const inputArray: Component =
                 , DOM:
                     instances
                       .pickCombine('DOM')
-                      .debug('nodes')
                       .map((vNodes) => div(vNodes))
-                      .debug('bundled')
                 }
               )
             }
