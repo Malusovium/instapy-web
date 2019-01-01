@@ -18,15 +18,10 @@ type IsPathType =
   (pathLocation: string, compareType: CompareType) =>
     (value: object) => boolean
 
-const lP =
-  (val:any) => { console.log(val); return val}
-
 const isPathType: IsPathType =
   (pathLocation, compareType) =>
     compose
-    // ( lP
     ( equals(compareType)
-    // , lP
     , rType
     , path(pathLocation)
     )

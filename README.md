@@ -21,12 +21,9 @@ A gui for instapy in the browser!
 
 Clone the project
 ```sh
-git clone https://github.com/Malusovium/instapy-web
-```
-
-Go in to project
-```sh
-cd instapy-web
+git clone https://github.com/Malusovium/instapy-web instapy-web && \
+cd instapy-web && \
+git checkout tags/v0.0.1
 ```
 
 Change environment variables

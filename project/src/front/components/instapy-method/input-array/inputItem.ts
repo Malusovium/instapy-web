@@ -18,7 +18,6 @@ const intent =
       DOM
         .select('input')
         .events('input')
-        .debug('input')
         .map(path('target.value'))
         .map
          ( (newValue) => (prevValue) => newValue )

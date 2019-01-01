@@ -135,7 +135,6 @@ const handleControlActions =
                () => {
                  controlManager
                    .start()
-                   .then(console.log)
                }
            }
          )
@@ -148,7 +147,6 @@ const handleControlActions =
                () => {
                  controlManager
                    .stop()
-                   .then(console.log)
                }
            }
          )
@@ -157,7 +155,6 @@ const handleControlActions =
         .filter(propEq('TYPE', 'BUILD'))
         .map(path('DATA'))
         .map(map(toPythonMethod))
-        // .map(toPythonCreate)
         .addListener
          ( { next:
                (pythonLines: any) => {
@@ -165,24 +162,7 @@ const handleControlActions =
                }
            }
          )
-//       action$
-//         .filter(propEq('TYPE', 'START_STATUS'))
-//         .addListener
-//          ( { next:
-//               () => {
-//               }
-//            }
-//          )
-//
-//       action$
-//         .filter(propEq('TYPE', 'STOP_STATUS'))
-//         .addListener
-//          ( { next:
-//               () => {
-//               }
-//            }
-//          )
-//
+
       action$
         .filter(propEq('TYPE', 'SET_CONFIG'))
         .map(path('DATA.config'))

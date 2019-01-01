@@ -14,7 +14,6 @@ import { mustArray } from './../../../utils/must'
 const dom =
   ( [ { name
       , isIncluded
-      // , value
       }
     , itemNodes
     ]
@@ -53,7 +52,6 @@ const dom =
 const view =
   (state$: Stream<State>, itemNodes$) =>
     xs.combine(state$, itemNodes$)
-      .debug('view')
       .map(dom)
 
 export

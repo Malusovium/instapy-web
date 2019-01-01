@@ -129,7 +129,6 @@ const intent = (DOM: DOMSource): Stream<Reducer> => {
       .select('input')
       .events('input')
       .map(path('target.value'))
-      .debug('value')
       .map<Reducer>
        ( (value:string) =>
            (prev) => (
