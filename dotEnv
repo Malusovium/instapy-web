@@ -7,3 +7,9 @@ DOMAIN=example.com
 
 # Letsencrypt email
 EMAIL=john@example.com
+
+# instapy-web credentials
+USER_NAME=admin
+PASS_WORD=password
+
+JWT_SECRET=SecReT
