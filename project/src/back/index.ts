@@ -94,6 +94,13 @@ const handleRequest =
                  }
                )
          }
+         if (req.url.endsWith('.svg')){
+           res.writeHead
+               ( 200
+               , { 'Content-Type': 'image/svg+xml'
+                 }
+               )
+         }
          res.write(mess)
        })
       .catch
