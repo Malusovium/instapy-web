@@ -74,19 +74,19 @@ Installation complete happy automating!
 
 ### Usage
 
-####Starting server
+#### Starting server
 ```sh
 sh start.sh
 ```
 
-####Stopping server
+#### Stopping server
 ```sh
 sh stop.sh
 ```
 
 ### Developers
 
-####Setup
+#### Setup
 ```sh
 mkdir data
 git clone https://github.com/timgrossman/InstaPy ./data/InstaPy
@@ -94,19 +94,19 @@ cd project
 npm i
 ```
 
-####Start backend
+#### Start backend
 ```sh
 # in project
 npm run front:dev
 ```
 
-####Start frontend
+#### Start frontend
 ```sh
 # in project
 npm run back:dev
 ```
 
-####Navigate to browser
+#### Navigate to browser
 `http://localhost:1234`
 
 happy developing!
