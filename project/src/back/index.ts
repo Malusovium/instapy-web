@@ -72,7 +72,7 @@ const routes =
     { ...makeFrontRoutes(frontRoutes)
     , ...makeFrontAssetRoutes(frontAssets)
     }
-  , GET: sendStatic(`${FRONT_BUILD_PATH}/index.html`)
+  , ...serveIndexHTML
   }
 
 const router =
