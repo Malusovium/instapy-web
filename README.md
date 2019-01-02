@@ -59,7 +59,8 @@ JWT_SECRET=MySecret
 ```
 
 #### Install dependancies
-Note: Only for Ubuntu users using another distro skip this step.
+Note: Only for Ubuntu users,
+using another distro? skip this step.
 ```sh
 sh install.sh
 ```
