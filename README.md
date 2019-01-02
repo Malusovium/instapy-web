@@ -2,9 +2,12 @@
 
 This isn't production ready yet hence the 0.X.X
 Use at your own risk!
-A compete rewrite is coming, expect breaking changes.
+A complete rewrite is comming, expect breaking changes.
 Updating will probably a pain.
 Any feedback is more than welcome!
+
+InstaPy functionality with
+[instapy-tools](https://github.com/Malusovium/instapy-tools)
 
 ### introduction
 
