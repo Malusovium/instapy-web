@@ -44,6 +44,28 @@ const defaultLens =
     }
   )
 
+const unionLens =
+  (def, index) => (
+    { get:
+      (parentState) => (
+        { ...parentState[`_${index}`]
+        , isIncluded: true
+        }
+      )
+      , set:
+      (parentState, childState) => (
+        { ...parentState
+        , [`_${index}`]:
+          { ...childState
+          , value:
+              childState[`_${childState.active}`] === undefined
+                ? def
+                : childState[`_${childState.active}`].value
+          }
+      )
+    }
+  )
+
 const constantComponentLens =
   (value: any, index:number) => (
     { get:
@@ -122,7 +144,7 @@ const inputUnion =
               , number: defaultLens
               , array: defaultLens
               , tuple: defaultLens
-              , union: defaultLens
+              , union: unionLens
               }
             )
           )

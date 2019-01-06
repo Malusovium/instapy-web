@@ -158,7 +158,13 @@ const handleControlActions =
         .addListener
          ( { next:
                (pythonLines: any) => {
-                 toPythonCreate(pythonLines, true)
+                 const [init, ...lines] = pythonLines
+                 const extendedInit =
+                   [init
+                   , `session.set_selenium_remote_session(selenium_url='http://selenium:4444/wd/hub')`
+                   ].join('\n')
+                 const newPythonLines = [ extendedInit, ...lines ]
+                 toPythonCreate(newPythonLines, true)
                }
            }
          )
