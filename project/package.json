@@ -1,6 +1,6 @@
 {
   "name": "instapy-web-back",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Instapy web backend",
   "main": "src/index.ts",
   "scripts": {
@@ -11,7 +11,7 @@
     "test": "ava-ts src/**/*-test.ts -w"
   },
   "author": "Malusovium",
-  "license": "MIT",
+  "license": "GPLv3",
   "dependencies": {
     "@cycle/history": "^7.1.0",
     "@cycle/http": "^15.1.0",
@@ -27,7 +27,7 @@
     "cyclic-router": "^6.0.0",
     "dotenv": "^6.2.0",
     "greenlock-express": "^2.6.7",
-    "instapy-tools": "^0.8.4",
+    "instapy-tools": "^0.9.0",
     "jsonwebtoken": "^8.3.0",
     "rambda": "^1.2.6",
     "switch-path": "^1.2.0",

@@ -37,7 +37,7 @@ Clone the project
 ```sh
 git clone https://github.com/Malusovium/instapy-web instapy-web && \
 cd instapy-web && \
-git checkout tags/v0.1.0
+git checkout tags/v0.2.0
 ```
 
 #### Change environment variables

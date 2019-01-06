@@ -22,7 +22,7 @@ const INSTAPY_LOCATION = `${DATA_LOCATION}/InstaPy`
 const { raw, setupMethod, setupCreate } = api
 
 const toPythonMethod = setupMethod(raw)
-const toPythonCreate = setupCreate(INSTAPY_LOCATION)
+const toPythonCreate = setupCreate(true, INSTAPY_LOCATION)
 
 const setupStatusStream =
   (status: Watcher) =>
